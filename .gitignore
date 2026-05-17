@@ -22,5 +22,16 @@ android_sdk/
 test-results/
 screenshots/
 
+# Skill generated artifacts
+.skills/*/.tmp/
+
+# Root-level test screenshots / dumps
+screen*.png
+ui.xml
+
+# Environment
+.env
+.env.*
+
 # Build-time assets (downloaded by Gradle task)
 app/src/main/assets/termux/bootstrap/
