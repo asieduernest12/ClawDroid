@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ClawDroid</string>
+    <string name="welcome_message">Welcome to ClawDroid</string>
+
+    <string name="bootstrap_initializing">Initializing Termux environment…</string>
+    <string name="bootstrap_checking">Setting up Termux environment…</string>
+    <string name="bootstrap_extracting">Extracting Termux environment…</string>
+    <string name="bootstrap_ready">Termux environment ready</string>
+    <string name="bootstrap_error">Bootstrap error: %s</string>
+    
+    <!-- PicoClaw Status -->
+    <string name="picoclaw_status_stopped">PicoClaw: Stopped</string>
+    <string name="picoclaw_status_running">PicoClaw: Running</string>
+    <string name="picoclaw_status_starting">PicoClaw: Starting…</string>
+    <string name="picoclaw_status_stopping">PicoClaw: Stopping…</string>
+    
+    <!-- Control Buttons -->
+    <string name="btn_start">Start PicoClaw</string>
+    <string name="btn_stop">Stop PicoClaw</string>
+    <string name="btn_restart">Restart PicoClaw</string>
+    <string name="btn_mission_control">Mission Control</string>
+    <string name="btn_view_logs">View Logs</string>
+    
+    <!-- Server Info -->
+    <string name="server_status">Server: http://localhost:%1$d</string>
+    <string name="mission_control_hint">Open in browser</string>
+</resources>
