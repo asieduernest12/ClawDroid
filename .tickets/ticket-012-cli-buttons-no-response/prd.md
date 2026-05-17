@@ -128,45 +128,45 @@ At minimum:
 
 ### Task 1: Investigate and confirm root causes
 
-- [ ] Subtask 1.1: Verify that `executeCliCommand()` ProcessBuilder lacks Termux bootstrap env vars
+- [x] Subtask 1.1: Verify that `executeCliCommand()` ProcessBuilder lacks Termux bootstrap env vars
   - **Objective**: Confirm env mismatch between `createPicoClawSession()` and `executeCliCommand()`
   - **Test**: Code review of `AgentChatActivity.kt:414-417` vs `App.kt:135-142` vs `TermuxBootstrapManager.getEnv()`
   - **Depends on**: None
 
-- [ ] Subtask 1.2: Verify that `loadProviderTerminalOutput()` wipes CLI command responses
+- [x] Subtask 1.2: Verify that `loadProviderTerminalOutput()` wipes CLI command responses
   - **Objective**: Confirm the clearing behavior when gateway output flow emits
   - **Test**: Trace `_outputLines` emission → collection → `terminalLines.clear()` path
   - **Depends on**: None
 
 ### Task 2: Implement CLI command execution fix
 
-- [ ] Subtask 2.1: Add Termux bootstrap environment variables to `executeCliCommand()`
+- [x] Subtask 2.1: Add Termux bootstrap environment variables to `executeCliCommand()`
   - **Objective**: CLI subprocess inherits PATH, LD_LIBRARY_PATH, HOME, PREFIX, TMPDIR, etc.
   - **Test**: CLI commands produce output instead of silent failure
   - **Depends on**: Task 1 (root cause confirmed)
 
-- [ ] Subtask 2.2: Decouple CLI output from gateway session output display
+- [x] Subtask 2.2: Decouple CLI output from gateway session output display
   - **Objective**: CLI command responses are visible in terminal and not wiped by gateway log output
   - **Test**: Click "version" chip → version string appears and persists
   - **Depends on**: Task 1
 
-- [ ] Subtask 2.3: Add 10-second timeout to CLI command execution
+- [x] Subtask 2.3: Add 10-second timeout to CLI command execution
   - **Objective**: Hanging CLI commands don't freeze the UI
   - **Test**: Invalid command shows timeout error after 10s
   - **Depends on**: Subtask 2.1
 
 ### Task 3: Testing & Quality
 
-- [ ] Subtask 3.1: Unit test `executeCliCommand()` env injection
+- [x] Subtask 3.1: Unit test `executeCliCommand()` env injection
   - **Objective**: Verify bootstrap env vars are passed to ProcessBuilder
   - **Test**: `make test-unit-debug` passes
 
-- [ ] Subtask 3.2: Manual verification on emulator
+- [x] Subtask 3.2: Manual verification on emulator
   - **Objective**: All 5 CLI chips produce expected output
   - **Test**: Tap each chip → response appears in terminal
   - **Depends on**: Task 2
 
-- [ ] Subtask 3.3: Run full quality check
+- [x] Subtask 3.3: Run full quality check
   - **Objective**: No regressions
   - **Test**: `make quality-check` exits 0
   - **Depends on**: Subtask 3.1
@@ -175,12 +175,12 @@ At minimum:
 
 ## Acceptance Criteria
 
-1. [ ] "status" chip shows PicoClaw gateway status in terminal
-2. [ ] "version" chip shows PicoClaw version string
-3. [ ] "gateway" chip reports gateway status
-4. [ ] "model list" chip lists available models
-5. [ ] "restart" chip restarts PicoClaw and shows restart logs
-6. [ ] CLI output persists and isn't wiped by background gateway log emissions
-7. [ ] Hanging CLI commands timeout after 10s with error message
-8. [ ] No null-pointer crashes when gateway session is null
-9. [ ] `make quality-check` exits 0
+1. [x] "status" chip shows PicoClaw gateway status in terminal
+2. [x] "version" chip shows PicoClaw version string
+3. [x] "gateway" chip reports gateway status
+4. [x] "model list" chip lists available models
+5. [x] "restart" chip restarts PicoClaw and shows restart logs
+6. [x] CLI output persists and isn't wiped by background gateway log emissions
+7. [x] Hanging CLI commands timeout after 10s with error message
+8. [x] No null-pointer crashes when gateway session is null
+9. [x] `make quality-check` exits 0
