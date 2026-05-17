@@ -165,7 +165,8 @@
             </LinearLayout>
         </LinearLayout>
 
-        <include layout="@layout/bottom_sheet_terminal" />
     </FrameLayout>
+
+    <include layout="@layout/bottom_sheet_terminal" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
