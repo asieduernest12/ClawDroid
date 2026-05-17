@@ -94,12 +94,12 @@ class MissionControlServer(
                    else "mission-control$uri"
 
         val mime = when {
-            uri.endsWith(".html") -> "text/html"
-            uri.endsWith(".css") -> "text/css"
-            uri.endsWith(".js") -> "application/javascript"
-            uri.endsWith(".png") -> "image/png"
-            uri.endsWith(".svg") -> "image/svg+xml"
-            uri.endsWith(".json") -> "application/json"
+            path.endsWith(".html") -> "text/html"
+            path.endsWith(".css") -> "text/css"
+            path.endsWith(".js") -> "application/javascript"
+            path.endsWith(".png") -> "image/png"
+            path.endsWith(".svg") -> "image/svg+xml"
+            path.endsWith(".json") -> "application/json"
             else -> MIME_PLAINTEXT
         }
 
