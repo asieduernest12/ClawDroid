@@ -69,31 +69,74 @@ class App : Application() {
     }
 
     private fun extractPicoClawBinary() {
+        val arch = detectDeviceArch()
+        val assetName = "picoclaw/picoclaw-$arch"
         val targetDir = File(filesDir, "picoclaw")
-        val targetFile = File(targetDir, "picoclaw-arm64")
+        val targetFile = File(targetDir, "picoclaw-$arch")
 
         if (targetFile.exists()) {
-            Log.d(TAG, "PicoClaw binary already extracted")
+            Log.d(TAG, "PicoClaw binary already extracted for $arch")
             return
+        }
+
+        // Clean up old binaries for different architectures
+        targetDir.listFiles()?.forEach { file ->
+            if (file.name.startsWith("picoclaw-") && file.name != targetFile.name) {
+                file.delete()
+                Log.d(TAG, "Cleaned up old binary: ${file.name}")
+            }
         }
 
         try {
             targetDir.mkdirs()
-            assets.open("picoclaw/picoclaw-arm64").use { input ->
+            assets.open(assetName).use { input ->
                 targetFile.outputStream().use { output ->
                     input.copyTo(output)
                 }
             }
             targetFile.setExecutable(true)
-            Log.d(TAG, "Extracted PicoClaw binary to ${targetFile.absolutePath}")
+            Log.d(TAG, "Extracted PicoClaw binary ($arch) to ${targetFile.absolutePath}")
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to extract PicoClaw binary", e)
+            Log.e(TAG, "Failed to extract PicoClaw binary for architecture $arch", e)
+        }
+    }
+
+    fun getPicoClawBinaryPath(): String? {
+        val arch = detectDeviceArch()
+        val file = File(filesDir, "picoclaw/picoclaw-$arch")
+        return if (file.exists()) file.absolutePath else null
+    }
+
+    private fun detectDeviceArch(): String {
+        val supportedAbis = android.os.Build.SUPPORTED_ABIS
+        Log.d(TAG, "Device ABIs: ${supportedAbis.joinToString()}")
+
+        // Check for exact matches first
+        for (abi in supportedAbis) {
+            when {
+                abi.equals("arm64-v8a", ignoreCase = true) -> return "arm64"
+                abi.equals("x86_64", ignoreCase = true) -> return "x86_64"
+                abi.equals("armeabi-v7a", ignoreCase = true) -> return "arm"
+                abi.equals("x86", ignoreCase = true) -> return "x86"
+            }
+        }
+
+        // Fallback to os.arch property
+        val arch = System.getProperty("os.arch")?.lowercase() ?: "aarch64"
+        return when {
+            arch.contains("aarch64") || arch.contains("arm64") -> "arm64"
+            arch.contains("x86_64") || arch.contains("amd64") -> "x86_64"
+            arch.contains("arm") -> "arm"
+            arch.contains("x86") || arch.contains("i686") -> "x86"
+            else -> "arm64"
         }
     }
 
     fun createPicoClawSession(): EmbeddedTermuxSession {
         picoclawSession?.stop()
-        val env = bootstrapManager.getEnv()
+        val env = bootstrapManager.getEnv().toMutableMap()
+        // Point PicoClaw home to the binary's directory so config.json is found
+        env["PICOCLAW_HOME"] = File(filesDir, "picoclaw").absolutePath
         val logFile = File(filesDir, "picoclaw.log")
         val session = EmbeddedTermuxSession("picoclaw", env, appScope, logFile)
         picoclawSession = session

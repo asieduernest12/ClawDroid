@@ -16,6 +16,9 @@ RUN apk add --no-cache \
     openssh \
     jq \
     nmap \
+    go \
+    ca-certificates \
+    tzdata \
     && rm -rf /var/cache/apk/*
 
 # Install Gradle
@@ -31,6 +34,21 @@ ENV ANDROID_SDK_ROOT=/opt/sdk \
     ANDROID_HOME=/opt/sdk \
     GRADLE_OPTS="-Dorg.gradle.daemon=false -Dorg.gradle.parallel=true" \
     TERM=xterm-256color
+
+# Set up NDK cross-compiler variables for Go CGO
+ENV NDK_TOOLCHAIN="/opt/sdk/ndk/25.2.9519653/toolchains/llvm/prebuilt/linux-x86_64/bin"
+ENV PATH="${NDK_TOOLCHAIN}:${PATH}"
+ENV CC_arm64="aarch64-linux-android21-clang"
+ENV CC_amd64="x86_64-linux-android21-clang"
+ENV CC_386="i686-linux-android21-clang"
+ENV CC_arm="armv7a-linux-androideabi21-clang"
+
+# Copy PicoClaw build scripts
+COPY docker/resolve-ref.sh /usr/local/bin/resolve-ref.sh
+COPY docker/build-picoclaw.sh /usr/local/bin/build-picoclaw.sh
+RUN chmod +x /usr/local/bin/resolve-ref.sh /usr/local/bin/build-picoclaw.sh
+
+ENV GITHUB_API="https://api.github.com/repos/sipeed/picoclaw"
 
 # Create app directory
 WORKDIR /app

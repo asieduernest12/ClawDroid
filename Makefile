@@ -87,6 +87,18 @@ adb-logcat:
 gradle-wrapper:
 	docker compose exec build gradle wrapper --gradle-version=8.9
 
+# ── PicoClaw Binary Builder ─────────────────────────────
+# Runs inside the build container via compose exec.
+# PICO_RELEASE defaults to unset (+48h tag lag).
+#   make build-picoclaw                           # default (48h tag lag)
+#   make build-picoclaw PICO_RELEASE=latest       # newest tag
+#   make build-picoclaw PICO_RELEASE=v0.2.8       # specific version
+#   make build-picoclaw PICO_RELEASE=+24h         # 24h lag
+#   make build-picoclaw PICO_RELEASE=HEAD         # latest commit
+
+build-picoclaw:
+	docker compose exec -e PICO_RELEASE=$(PICO_RELEASE) build build-picoclaw.sh
+
 # ── Cleanup ──────────────────────────────────────────────
 
 prune:
@@ -96,4 +108,4 @@ prune:
 	build-debug build-release clean \
 	test-unit test-unit-debug test-integration test-e2e test-all lint quality-check \
 	adb-connect adb-wait adb-shell adb-install adb-logcat \
-	gradle-wrapper prune
+	gradle-wrapper prune build-picoclaw
