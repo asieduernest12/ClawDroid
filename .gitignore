@@ -27,6 +27,7 @@ screenshots/
 
 # Root-level test screenshots / dumps
 screen*.png
+clawdroid-*.png
 ui.xml
 
 # Environment
