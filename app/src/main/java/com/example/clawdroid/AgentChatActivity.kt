@@ -3,14 +3,6 @@ package com.example.clawdroid
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
-import android.text.SpannableStringBuilder
-import android.text.Spanned
-import android.text.style.BackgroundColorSpan
-import android.text.style.ForegroundColorSpan
-import android.text.style.StrikethroughSpan
-import android.text.style.StyleSpan
-import android.text.style.TypefaceSpan
-import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -25,8 +17,11 @@ import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.clawdroid.chat.ChatAdapter
+import com.example.clawdroid.chat.ChatHistoryManager
 import com.example.clawdroid.config.ProviderConfigManager
 import com.example.clawdroid.model.ChatMessage
+import com.example.clawdroid.model.ChatSession
 import com.example.clawdroid.model.MessageRole
 import com.example.clawdroid.model.ModelProvider
 import com.example.clawdroid.model.PickerModel
@@ -44,7 +39,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -73,10 +67,12 @@ class AgentChatActivity : AppCompatActivity() {
     private val terminalAdapter = TerminalAdapter()
     private val terminalLines = mutableListOf<String>()
     private val configManager by lazy { ProviderConfigManager(this) }
+    private val chatHistoryManager by lazy { ChatHistoryManager(this) }
     private var activeProvider: ModelProvider? = null
     private var activeModel: String = ""
     private val fetchedModels = mutableListOf<String>()
     private var isExecutingCliCommand = false
+    private var currentSessionId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -112,8 +108,12 @@ class AgentChatActivity : AppCompatActivity() {
 
         toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {
+                R.id.action_sessions -> {
+                    showSessionsDialog()
+                    true
+                }
                 R.id.action_clear_chat -> {
-                    chatAdapter.clearMessages()
+                    clearCurrentSession()
                     true
                 }
                 R.id.action_fetch_models -> {
@@ -132,7 +132,96 @@ class AgentChatActivity : AppCompatActivity() {
         setupSendActions()
         loadProviderTerminalOutput()
 
+        initSession()
+    }
+
+    private fun initSession() {
+        val savedId = chatHistoryManager.getCurrentSessionId()
+        val session = if (savedId != null) {
+            chatHistoryManager.getSession(savedId)
+        } else null
+
+        if (session != null) {
+            currentSessionId = session.id
+            activeProvider = configManager.loadProviders()
+                .find { it.modelName == session.providerId }
+            activeModel = session.modelId
+            if (activeProvider != null) {
+                dropdownProvider.setText(activeProvider?.modelName, false)
+            }
+            if (activeModel.isNotBlank()) {
+                selectedModel.text = activeModel.substringAfterLast("/")
+            }
+            val messages = chatHistoryManager.getMessages(session.id)
+            chatAdapter.setMessages(messages)
+            if (messages.isEmpty()) {
+                addSystemMessage(getString(R.string.agent_welcome))
+            }
+        } else {
+            createNewSession()
+            addSystemMessage(getString(R.string.agent_welcome))
+        }
+    }
+
+    private fun createNewSession() {
+        val provider = activeProvider
+        val session = chatHistoryManager.createSession(
+            providerId = provider?.modelName ?: "",
+            modelId = activeModel
+        )
+        currentSessionId = session.id
+        chatHistoryManager.setCurrentSessionId(session.id)
+        chatAdapter.clearMessages()
+    }
+
+    private fun clearCurrentSession() {
+        val sessionId = currentSessionId ?: return
+        chatHistoryManager.clearMessages(sessionId)
+        chatAdapter.clearMessages()
         addSystemMessage(getString(R.string.agent_welcome))
+    }
+
+    private fun showSessionsDialog() {
+        val sessions = chatHistoryManager.getSessions()
+        if (sessions.isEmpty()) {
+            Toast.makeText(this, "No sessions yet", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val items = sessions.map { it.title }.toTypedArray()
+        val selectedIndex = sessions.indexOfFirst { it.id == currentSessionId }.coerceAtLeast(0)
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Chat Sessions")
+            .setSingleChoiceItems(items, selectedIndex) { dialog, which ->
+                val session = sessions[which]
+                switchToSession(session)
+                dialog.dismiss()
+            }
+            .setPositiveButton("New Session") { _, _ ->
+                createNewSession()
+                addSystemMessage(getString(R.string.agent_welcome))
+            }
+            .setNegativeButton("Close", null)
+            .show()
+    }
+
+    private fun switchToSession(session: ChatSession) {
+        currentSessionId = session.id
+        chatHistoryManager.setCurrentSessionId(session.id)
+        activeProvider = configManager.loadProviders()
+            .find { it.modelName == session.providerId }
+        activeModel = session.modelId
+        if (activeProvider != null) {
+            dropdownProvider.setText(activeProvider?.modelName, false)
+        }
+        if (activeModel.isNotBlank()) {
+            selectedModel.text = activeModel.substringAfterLast("/")
+        } else {
+            selectedModel.text = ""
+        }
+        val messages = chatHistoryManager.getMessages(session.id)
+        chatAdapter.setMessages(messages)
     }
 
     private fun setupProviderDropdown() {
@@ -154,6 +243,12 @@ class AgentChatActivity : AppCompatActivity() {
             fetchedModels.clear()
             selectedModel.hint = getString(R.string.agent_model_hint)
             addSystemMessage("Switched provider to ${activeProvider?.modelName}")
+            currentSessionId?.let { sid ->
+                chatHistoryManager.getSession(sid)?.let { session ->
+                    val updated = session.copy(providerId = activeProvider?.modelName ?: "")
+                    chatHistoryManager.updateSession(updated)
+                }
+            }
             fetchModelsFromProvider()
         }
 
@@ -177,6 +272,12 @@ class AgentChatActivity : AppCompatActivity() {
                     activeModel = modelId
                     selectedModel.text = modelId.substringAfterLast("/")
                     addSystemMessage("Model set to $activeModel")
+                    currentSessionId?.let { sid ->
+                        chatHistoryManager.getSession(sid)?.let { session ->
+                            val updated = session.copy(modelId = activeModel)
+                            chatHistoryManager.updateSession(updated)
+                        }
+                    }
                 }
             )
             sheet.show(supportFragmentManager, "model_picker")
@@ -334,7 +435,16 @@ class AgentChatActivity : AppCompatActivity() {
             return
         }
 
-        chatAdapter.addMessage(ChatMessage(MessageRole.USER, text))
+        val sessionId = currentSessionId ?: run {
+            createNewSession()
+            currentSessionId!!
+        }
+
+        // Persist user message
+        val userMsg = ChatMessage(MessageRole.USER, text)
+        chatHistoryManager.addMessage(sessionId, userMsg)
+        chatAdapter.addMessage(userMsg)
+        recyclerChat.smoothScrollToPosition(chatAdapter.itemCount - 1)
         inputMessage.text?.clear()
         cardTyping.isVisible = true
 
@@ -356,14 +466,39 @@ class AgentChatActivity : AppCompatActivity() {
                 conn.connectTimeout = 30000
                 conn.readTimeout = 60000
 
+                // Build full conversation history
+                val historyMessages = chatHistoryManager.getMessages(sessionId)
+                val messagesJson = JSONArray().apply {
+                    // Add system prompt if first message
+                    if (historyMessages.none { it.role == MessageRole.USER }) {
+                        put(JSONObject().apply {
+                            put("role", "system")
+                            put("content", "You are a helpful AI assistant running inside ClawDroid on Android.")
+                        })
+                    }
+                    historyMessages.forEach { msg ->
+                        when (msg.role) {
+                            MessageRole.USER -> put(JSONObject().apply {
+                                put("role", "user")
+                                put("content", msg.content)
+                            })
+                            MessageRole.AGENT -> put(JSONObject().apply {
+                                put("role", "assistant")
+                                put("content", msg.content)
+                            })
+                            MessageRole.TOOL_CALL -> put(JSONObject().apply {
+                                put("role", "tool")
+                                put("tool_call_id", msg.id)
+                                put("content", msg.toolResult ?: "")
+                            })
+                            else -> { /* skip system/thinking display messages */ }
+                        }
+                    }
+                }
+
                 val body = JSONObject().apply {
                     put("model", model)
-                    put("messages", JSONArray().apply {
-                        put(JSONObject().apply {
-                            put("role", "user")
-                            put("content", text)
-                        })
-                    })
+                    put("messages", messagesJson)
                 }
 
                 conn.outputStream.use { it.write(body.toString().toByteArray()) }
@@ -383,15 +518,70 @@ class AgentChatActivity : AppCompatActivity() {
 
                 val json = JSONObject(response)
                 val choices = json.optJSONArray("choices")
-                val reply = if (choices != null && choices.length() > 0) {
-                    choices.getJSONObject(0).getJSONObject("message").optString("content", "")
-                } else {
-                    json.optString("error", "No response")
+                val firstChoice = choices?.optJSONObject(0)
+                val messageObj = firstChoice?.optJSONObject("message")
+
+                // Parse thinking / reasoning content
+                var thinkingContent: String? = null
+                messageObj?.optString("reasoning_content")?.let {
+                    if (it.isNotBlank()) thinkingContent = it
                 }
+                if (thinkingContent == null) {
+                    firstChoice?.optString("reasoning")?.let {
+                        if (it.isNotBlank()) thinkingContent = it
+                    }
+                }
+
+                // Parse tool calls
+                val toolCallsJson = messageObj?.optJSONArray("tool_calls")
+                val toolCalls = mutableListOf<Triple<String, String, String>>()
+                if (toolCallsJson != null) {
+                    for (i in 0 until toolCallsJson.length()) {
+                        val tc = toolCallsJson.getJSONObject(i)
+                        val func = tc.getJSONObject("function")
+                        toolCalls.add(Triple(
+                            func.optString("name", "unknown"),
+                            func.optString("arguments", "{}"),
+                            ""
+                        ))
+                    }
+                }
+
+                val reply = messageObj?.optString("content", "")
+                    ?: json.optString("error", "No response")
 
                 withContext(Dispatchers.Main) {
                     cardTyping.isVisible = false
-                    chatAdapter.addMessage(ChatMessage(MessageRole.AGENT, reply))
+
+                    // Show thinking if present
+                    thinkingContent?.let { thinking ->
+                        val thinkingMsg = ChatMessage(
+                            role = MessageRole.THINKING,
+                            content = thinking,
+                            thinkingContent = thinking
+                        )
+                        chatHistoryManager.addMessage(sessionId, thinkingMsg)
+                        chatAdapter.addMessage(thinkingMsg)
+                    }
+
+                    // Show tool calls if present
+                    toolCalls.forEach { (name, args, _) ->
+                        val toolMsg = ChatMessage(
+                            role = MessageRole.TOOL_CALL,
+                            content = "Tool: $name",
+                            toolName = name,
+                            toolArguments = args,
+                            toolResult = ""
+                        )
+                        chatHistoryManager.addMessage(sessionId, toolMsg)
+                        chatAdapter.addMessage(toolMsg)
+                    }
+
+                    // Show agent reply
+                    val agentMsg = ChatMessage(MessageRole.AGENT, reply)
+                    chatHistoryManager.addMessage(sessionId, agentMsg)
+                    chatAdapter.addMessage(agentMsg)
+                    recyclerChat.smoothScrollToPosition(chatAdapter.itemCount - 1)
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
@@ -491,6 +681,7 @@ class AgentChatActivity : AppCompatActivity() {
 
     private fun addSystemMessage(text: String) {
         chatAdapter.addMessage(ChatMessage(MessageRole.SYSTEM, text))
+        recyclerChat.smoothScrollToPosition(chatAdapter.itemCount - 1)
     }
 
     private fun restartPicoClaw() {
@@ -519,83 +710,6 @@ class AgentChatActivity : AppCompatActivity() {
         }
     }
 
-    private inner class ChatAdapter :
-        RecyclerView.Adapter<ChatAdapter.ViewHolder>() {
-
-        private val messages = mutableListOf<ChatMessage>()
-
-        fun addMessage(msg: ChatMessage) {
-            messages.add(msg)
-            notifyItemInserted(messages.size - 1)
-            recyclerChat.smoothScrollToPosition(messages.size - 1)
-        }
-
-        fun clearMessages() {
-            val count = messages.size
-            messages.clear()
-            notifyItemRangeRemoved(0, count)
-        }
-
-        override fun getItemViewType(position: Int): Int = when (messages[position].role) {
-            MessageRole.USER -> 0
-            MessageRole.AGENT -> 1
-            MessageRole.SYSTEM -> 2
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val view = when (viewType) {
-                0, 1 -> LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_chat_message, parent, false)
-                else -> {
-                    val tv = TextView(parent.context).apply {
-                        setPadding(24, 12, 24, 12)
-                        setTextColor(Color.GRAY)
-                        textSize = 13f
-                        gravity = android.view.Gravity.CENTER
-                    }
-                    return ViewHolder(tv, null, null, null, null)
-                }
-            }
-            return ViewHolder(view,
-                view.findViewById(R.id.bubble_agent),
-                view.findViewById(R.id.text_agent),
-                view.findViewById(R.id.bubble_user),
-                view.findViewById(R.id.text_user))
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val msg = messages[position]
-            when (msg.role) {
-                MessageRole.USER -> holder.bindUser(msg.content)
-                MessageRole.AGENT -> holder.bindAgent(msg.content)
-                MessageRole.SYSTEM -> (holder.itemView as? TextView)?.text = msg.content
-            }
-        }
-
-        override fun getItemCount() = messages.size
-
-        inner class ViewHolder(
-            itemView: View,
-            private val bubbleAgent: MaterialCardView?,
-            private val textAgent: TextView?,
-            private val bubbleUser: MaterialCardView?,
-            private val textUser: TextView?
-        ) : RecyclerView.ViewHolder(itemView) {
-
-            fun bindAgent(text: String) {
-                bubbleUser?.isVisible = false
-                bubbleAgent?.isVisible = true
-                textAgent?.text = renderMarkdown(text)
-            }
-
-            fun bindUser(text: String) {
-                bubbleAgent?.isVisible = false
-                bubbleUser?.isVisible = true
-                textUser?.text = text
-            }
-        }
-    }
-
     private inner class TerminalAdapter :
         RecyclerView.Adapter<TerminalAdapter.ViewHolder>() {
 
@@ -618,70 +732,5 @@ class AgentChatActivity : AppCompatActivity() {
         override fun getItemCount() = terminalLines.size
 
         inner class ViewHolder(val textView: TextView) : RecyclerView.ViewHolder(textView)
-    }
-
-    private fun renderMarkdown(text: String): CharSequence {
-        val sb = SpannableStringBuilder()
-        var i = 0
-        while (i < text.length) {
-            when {
-                text.startsWith("**", i) -> {
-                    val end = text.indexOf("**", i + 2)
-                    if (end != -1) {
-                        val start = sb.length
-                        sb.append(text.substring(i + 2, end))
-                        sb.setSpan(StyleSpan(Typeface.BOLD), start, sb.length,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        i = end + 2
-                    } else { sb.append(text[i]); i++ }
-                }
-                text.startsWith("*", i) && !text.startsWith("**", i) -> {
-                    val end = text.indexOf("*", i + 1)
-                    if (end != -1) {
-                        val start = sb.length
-                        sb.append(text.substring(i + 1, end))
-                        sb.setSpan(StyleSpan(Typeface.ITALIC), start, sb.length,
-                            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        i = end + 1
-                    } else { sb.append(text[i]); i++ }
-                }
-                text.startsWith("`", i) -> {
-                    val end = text.indexOf("`", i + 1)
-                    if (end != -1) {
-                        val start = sb.length
-                        sb.append(text.substring(i + 1, end))
-                        sb.setSpan(ForegroundColorSpan(Color.parseColor("#4ADE80")),
-                            start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        sb.setSpan(BackgroundColorSpan(Color.parseColor("#1A2332")),
-                            start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        i = end + 1
-                    } else { sb.append(text[i]); i++ }
-                }
-                text.startsWith("```", i) -> {
-                    val end = text.indexOf("```", i + 3)
-                    if (end != -1) {
-                        val start = sb.length
-                        sb.append("\n")
-                        sb.append(text.substring(i + 3, end).trim())
-                        sb.append("\n")
-                        sb.setSpan(ForegroundColorSpan(Color.parseColor("#4ADE80")),
-                            start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        sb.setSpan(BackgroundColorSpan(Color.parseColor("#1A2332")),
-                            start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
-                        i = end + 3
-                    } else { sb.append(text[i]); i++ }
-                }
-                text.startsWith("\n- ", i) || (i == 0 && text.startsWith("- ", i)) -> {
-                    sb.append("\n  • ")
-                    i += if (text.startsWith("\n- ", i)) 3 else 2
-                }
-                text.startsWith("\n", i) -> {
-                    sb.append("\n")
-                    i++
-                }
-                else -> { sb.append(text[i]); i++ }
-            }
-        }
-        return sb
     }
 }

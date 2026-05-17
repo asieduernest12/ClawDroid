@@ -116,8 +116,14 @@
     <string name="agent_input_hint">Type a message…</string>
     <string name="agent_send_desc">Send message</string>
     <string name="agent_typing">PicoClaw is thinking…</string>
+    <string name="agent_menu_sessions">Sessions</string>
     <string name="agent_menu_clear">Clear Chat</string>
     <string name="agent_menu_fetch_models">Fetch Models</string>
+    <string name="sessions_title">Chat Sessions</string>
+    <string name="sessions_close_desc">Close</string>
+    <string name="sessions_new_desc">New Session</string>
+    <string name="sessions_rename_desc">Rename session</string>
+    <string name="sessions_delete_desc">Delete session</string>
     <string name="agent_welcome">Hello! I\'m PicoClaw, your on-device AI assistant. How can I help you today?</string>
     <string name="agent_error_send">Failed to send message</string>
     <string name="agent_btn_chat">Chat with Agent</string>

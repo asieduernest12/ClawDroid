@@ -1,0 +1,117 @@
+name: Deploy Android Release
+
+on:
+    push:
+        branches: [main]
+
+jobs:
+    version-bump:
+        name: Bump Version
+        runs-on: ubuntu-latest
+        if: "!contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-bump)')"
+        permissions:
+            contents: write
+            pull-requests: write
+        outputs:
+            new_version: ${{ steps.bump.outputs.new_version }}
+            tag_name: ${{ steps.bump.outputs.tag_name }}
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: '20'
+
+            - name: Install commit-and-tag-version
+              run: npm install -g commit-and-tag-version
+
+            - name: Configure Git User
+              run: |
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+
+            - name: Bump version
+              id: bump
+              run: |
+                  cmd="commit-and-tag-version --packageFiles version.txt --bumpFiles version.txt --skip.commit"
+                  if [[ "${{ github.event.head_commit.message }}" == *"chore(skip-tag)"* ]]; then
+                      cmd="$cmd --skip.tag"
+                  fi
+                  $cmd
+                  NEW_VERSION=$(cat version.txt)
+                  TAG_NAME="v${NEW_VERSION}"
+                  echo "new_version=${NEW_VERSION}" >> $GITHUB_OUTPUT
+                  echo "tag_name=${TAG_NAME}" >> $GITHUB_OUTPUT
+
+            - name: Commit version bump
+              run: |
+                  git add -A
+                  git commit -m "chore(release): bump version to ${{ steps.bump.outputs.new_version }} [skip ci]" || echo "No changes to commit"
+
+            - name: Push changes and tag
+              run: |
+                  git push origin main
+                  if [[ "${{ github.event.head_commit.message }}" != *"chore(skip-tag)"* ]]; then
+                      git tag ${{ steps.bump.outputs.tag_name }}
+                      git push origin ${{ steps.bump.outputs.tag_name }}
+                  fi
+
+    build-and-release:
+        name: Build and Release
+        runs-on: ubuntu-latest
+        needs: version-bump
+        if: "!contains(github.event.head_commit.message, 'chore(skip-release)') && !contains(github.event.head_commit.message, 'chore(skip-build)')"
+        permissions:
+            contents: write
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+
+            - name: Setup Java
+              uses: actions/setup-java@v4
+              with:
+                  distribution: 'temurin'
+                  java-version: '17'
+
+            - name: Start Docker build container
+              run: docker compose up -d
+
+            - name: Wait for container to be ready
+              run: |
+                  echo "Waiting for build container to be ready..."
+                  for i in {1..30}; do
+                      if docker compose ps build | grep -q "Up"; then
+                          echo "Container is up"
+                          break
+                      fi
+                      sleep 2
+                  done
+
+            - name: Build release APK
+              run: docker compose exec -T build ./gradlew assembleRelease
+
+            - name: Run tests
+              run: docker compose exec -T build ./gradlew test
+
+            - name: Find built APK
+              id: find_apk
+              run: |
+                  APK_PATH=$(ls app/build/outputs/apk/release/*.apk | head -n 1)
+                  echo "apk_path=${APK_PATH}" >> $GITHUB_OUTPUT
+
+            - name: Create GitHub Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  tag_name: ${{ needs.version-bump.outputs.tag_name }}
+                  name: Release ${{ needs.version-bump.outputs.tag_name }}
+                  body: |
+                      Automated release for version ${{ needs.version-bump.outputs.new_version }}.
+                      See changes in commit history.
+                  files: ${{ steps.find_apk.outputs.apk_path }}
