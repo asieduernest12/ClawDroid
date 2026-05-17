@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/bottom_sheet_terminal"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/terminal_bg"
+    android:paddingTop="8dp"
+    app:behavior_hideable="false"
+    app:behavior_peekHeight="160dp"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+
+    <View
+        android:layout_width="32dp"
+        android:layout_height="4dp"
+        android:layout_gravity="center_horizontal"
+        android:background="?attr/colorOnSurfaceVariant"
+        android:alpha="0.4" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingHorizontal="12dp"
+        android:paddingVertical="4dp">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/terminal_title"
+            android:textAppearance="?attr/textAppearanceLabelMedium"
+            android:textColor="?attr/colorOnSurfaceVariant" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_toggle_terminal"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:minWidth="0dp"
+            android:padding="0dp"
+            android:text="▲"
+            android:textSize="14sp"
+            android:contentDescription="@string/terminal_toggle_desc" />
+    </LinearLayout>
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="8dp"
+        android:layout_marginBottom="4dp">
+
+        <LinearLayout
+            android:id="@+id/chip_group_commands"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="status"
+                android:checkable="false"
+                style="@style/Widget.Material3.Chip.Assist"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipStrokeColor="?attr/colorPrimary"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="version"
+                android:checkable="false"
+                style="@style/Widget.Material3.Chip.Assist"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipStrokeColor="?attr/colorPrimary"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="gateway"
+                android:checkable="false"
+                style="@style/Widget.Material3.Chip.Assist"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipStrokeColor="?attr/colorPrimary"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="model list"
+                android:checkable="false"
+                style="@style/Widget.Material3.Chip.Assist"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipStrokeColor="?attr/colorPrimary"
+                app:chipStrokeWidth="1dp" />
+
+            <com.google.android.material.chip.Chip
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="restart"
+                android:checkable="false"
+                style="@style/Widget.Material3.Chip.Assist"
+                app:chipBackgroundColor="@android:color/transparent"
+                app:chipStrokeColor="?attr/colorPrimary"
+                app:chipStrokeWidth="1dp" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_terminal"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:padding="8dp"
+        android:clipToPadding="false" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="4dp"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingHorizontal="8dp"
+            android:text=">"
+            android:textColor="#4ADE80"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:fontFamily="monospace" />
+
+        <EditText
+            android:id="@+id/input_terminal"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@null"
+            android:textColor="#4ADE80"
+            android:textColorHint="#338855"
+            android:hint="@string/terminal_input_hint"
+            android:textAppearance="?attr/textAppearanceBodyMedium"
+            android:fontFamily="monospace"
+            android:inputType="text"
+            android:imeOptions="actionSend"
+            android:singleLine="true" />
+    </LinearLayout>
+
+</LinearLayout>

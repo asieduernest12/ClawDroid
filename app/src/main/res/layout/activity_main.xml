@@ -301,9 +301,20 @@
                         app:icon="@android:drawable/ic_menu_preferences"
                         app:iconGravity="textStart" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btn_mission_control"
-                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_chat_agent"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_gravity="fill"
+                    android:text="@string/agent_btn_chat"
+                    app:icon="@android:drawable/ic_menu_send"
+                    app:iconGravity="textStart" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_mission_control"
+                    style="@style/Widget.MaterialComponents.Button.OutlinedButton"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_columnWeight="1"

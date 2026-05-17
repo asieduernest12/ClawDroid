@@ -36,6 +36,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnMissionControl: MaterialButton
     private lateinit var btnViewLogs: MaterialButton
     private lateinit var btnProviders: MaterialButton
+    private lateinit var btnChatAgent: MaterialButton
     private lateinit var btnRestart: MaterialButton
     private lateinit var btnSettings: MaterialButton
 
@@ -64,6 +65,7 @@ class MainActivity : AppCompatActivity() {
         btnMissionControl = findViewById(R.id.btn_mission_control)
         btnViewLogs = findViewById(R.id.btn_view_logs)
         btnProviders = findViewById(R.id.btn_providers)
+        btnChatAgent = findViewById(R.id.btn_chat_agent)
         btnRestart = findViewById(R.id.btn_restart)
         btnSettings = findViewById(R.id.btn_settings)
     }
@@ -109,6 +111,10 @@ class MainActivity : AppCompatActivity() {
         btnProviders.setOnClickListener {
             val intent = Intent(this, ProviderListActivity::class.java)
             startActivity(intent)
+        }
+
+        btnChatAgent.setOnClickListener {
+            openAgentChat()
         }
 
         btnRestart.setOnClickListener {
@@ -287,6 +293,16 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(this, MissionControlActivity::class.java)
         intent.putExtra("port", status.serverPort)
         startActivity(intent)
+    }
+
+    private fun openAgentChat() {
+        val app = application as App
+        if (app.bootstrapState.value !is TermuxBootstrapState.Ready) {
+            showError(getString(R.string.error_picoclaw_not_ready))
+            return
+        }
+
+        startActivity(Intent(this, AgentChatActivity::class.java))
     }
 
     private fun viewLogs() {

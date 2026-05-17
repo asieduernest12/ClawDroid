@@ -109,4 +109,21 @@
     <string name="providers_saved_restart">Provider saved. Restart PicoClaw to apply.</string>
     <string name="providers_restarting">Restarting PicoClaw…</string>
     <string name="providers_restarted">PicoClaw restarted</string>
+
+    <!-- Agent Chat -->
+    <string name="agent_provider_hint">Provider</string>
+    <string name="agent_model_hint">Model</string>
+    <string name="agent_input_hint">Type a message…</string>
+    <string name="agent_send_desc">Send message</string>
+    <string name="agent_typing">PicoClaw is thinking…</string>
+    <string name="agent_menu_clear">Clear Chat</string>
+    <string name="agent_menu_fetch_models">Fetch Models</string>
+    <string name="agent_welcome">Hello! I\'m PicoClaw, your on-device AI assistant. How can I help you today?</string>
+    <string name="agent_error_send">Failed to send message</string>
+    <string name="agent_btn_chat">Chat with Agent</string>
+
+    <!-- Terminal -->
+    <string name="terminal_title">PicoClaw Terminal</string>
+    <string name="terminal_toggle_desc">Toggle terminal</string>
+    <string name="terminal_input_hint">Send command…</string>
 </resources>

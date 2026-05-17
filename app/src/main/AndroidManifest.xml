@@ -46,6 +46,12 @@
             android:name=".ProviderListActivity"
             android:exported="false"
             android:theme="@style/Theme.ClawDroid" />
+
+        <activity
+            android:name=".AgentChatActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ClawDroid"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
