@@ -41,6 +41,11 @@
             android:name=".LogViewerActivity"
             android:exported="false"
             android:theme="@style/Theme.ClawDroid" />
+
+        <activity
+            android:name=".ProviderListActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ClawDroid" />
     </application>
 
 </manifest>

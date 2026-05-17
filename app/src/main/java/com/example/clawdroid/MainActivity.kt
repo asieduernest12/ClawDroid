@@ -35,6 +35,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var fabAction: FloatingActionButton
     private lateinit var btnMissionControl: MaterialButton
     private lateinit var btnViewLogs: MaterialButton
+    private lateinit var btnProviders: MaterialButton
     private lateinit var btnRestart: MaterialButton
     private lateinit var btnSettings: MaterialButton
 
@@ -62,6 +63,7 @@ class MainActivity : AppCompatActivity() {
         fabAction = findViewById(R.id.fab_action)
         btnMissionControl = findViewById(R.id.btn_mission_control)
         btnViewLogs = findViewById(R.id.btn_view_logs)
+        btnProviders = findViewById(R.id.btn_providers)
         btnRestart = findViewById(R.id.btn_restart)
         btnSettings = findViewById(R.id.btn_settings)
     }
@@ -102,6 +104,11 @@ class MainActivity : AppCompatActivity() {
 
         btnViewLogs.setOnClickListener {
             viewLogs()
+        }
+
+        btnProviders.setOnClickListener {
+            val intent = Intent(this, ProviderListActivity::class.java)
+            startActivity(intent)
         }
 
         btnRestart.setOnClickListener {

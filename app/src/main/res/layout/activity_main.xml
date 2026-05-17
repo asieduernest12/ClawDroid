@@ -268,49 +268,60 @@
                         android:columnCount="2"
                         android:useDefaultMargins="true">
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_mission_control"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:layout_gravity="fill"
-                            android:text="@string/btn_mission_control"
-                            app:icon="@android:drawable/ic_menu_mapmode"
-                            app:iconGravity="textStart" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_providers"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_gravity="fill"
+                        android:text="@string/btn_providers"
+                        app:icon="@android:drawable/ic_menu_manage"
+                        app:iconGravity="textStart" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_view_logs"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:layout_gravity="fill"
-                            android:text="@string/btn_view_logs"
-                            app:icon="@android:drawable/ic_menu_recent_history"
-                            app:iconGravity="textStart" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_restart"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_gravity="fill"
+                        android:text="@string/btn_restart"
+                        app:icon="@android:drawable/ic_menu_rotate"
+                        app:iconGravity="textStart" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_restart"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:layout_gravity="fill"
-                            android:text="@string/btn_restart"
-                            app:icon="@android:drawable/ic_menu_rotate"
-                            app:iconGravity="textStart" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_settings"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_gravity="fill"
+                        android:text="@string/btn_settings"
+                        app:icon="@android:drawable/ic_menu_preferences"
+                        app:iconGravity="textStart" />
 
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btn_settings"
-                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_columnWeight="1"
-                            android:layout_gravity="fill"
-                            android:text="@string/btn_settings"
-                            app:icon="@android:drawable/ic_menu_preferences"
-                            app:iconGravity="textStart" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_mission_control"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_gravity="fill"
+                        android:text="@string/btn_mission_control"
+                        app:icon="@android:drawable/ic_menu_mapmode"
+                        app:iconGravity="textStart" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_view_logs"
+                        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_columnWeight="1"
+                        android:layout_gravity="fill"
+                        android:text="@string/btn_view_logs"
+                        app:icon="@android:drawable/ic_menu_recent_history"
+                        app:iconGravity="textStart" />
                     </GridLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>

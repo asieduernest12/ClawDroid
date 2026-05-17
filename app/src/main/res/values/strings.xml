@@ -80,6 +80,33 @@
     <string name="btn_restart">Restart PicoClaw</string>
     <string name="btn_mission_control">Mission Control</string>
     <string name="btn_view_logs">View Logs</string>
+    <string name="btn_providers">Providers</string>
     <string name="server_status">Server: http://localhost:%1$d</string>
     <string name="mission_control_hint">Open in browser</string>
+
+    <!-- Providers -->
+    <string name="providers_title">Providers</string>
+    <string name="providers_add_desc">Add provider</string>
+    <string name="providers_empty_title">No providers configured</string>
+    <string name="providers_empty_subtitle">Add an AI provider to get started.</string>
+    <string name="providers_key_set">Has Key</string>
+    <string name="providers_key_none">No Key</string>
+    <string name="providers_btn_edit">Edit</string>
+    <string name="providers_btn_delete">Delete</string>
+    <string name="providers_btn_save">Save Provider</string>
+    <string name="providers_btn_restart_now">Restart Now</string>
+    <string name="providers_menu_restart">Restart PicoClaw</string>
+    <string name="providers_dialog_add_title">Add Provider</string>
+    <string name="providers_dialog_edit_title">Edit Provider</string>
+    <string name="providers_field_name">Display Name</string>
+    <string name="providers_field_model">Provider/Model</string>
+    <string name="providers_field_key">API Key</string>
+    <string name="providers_field_url">API Base URL</string>
+    <string name="providers_field_preset">Quick Preset</string>
+    <string name="providers_error_model_required">Model is required</string>
+    <string name="providers_delete_title">Delete Provider</string>
+    <string name="providers_delete_message">Remove this provider from the configuration?</string>
+    <string name="providers_saved_restart">Provider saved. Restart PicoClaw to apply.</string>
+    <string name="providers_restarting">Restarting PicoClaw…</string>
+    <string name="providers_restarted">PicoClaw restarted</string>
 </resources>
