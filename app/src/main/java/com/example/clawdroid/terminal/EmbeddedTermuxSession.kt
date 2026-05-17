@@ -11,6 +11,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.io.OutputStreamWriter
 import java.io.File
 
 class EmbeddedTermuxSession(
@@ -30,6 +31,7 @@ class EmbeddedTermuxSession(
 
     private var processJob: Job? = null
     private var process: Process? = null
+    private var stdinWriter: OutputStreamWriter? = null
 
     fun start(
         command: String,
@@ -58,6 +60,7 @@ class EmbeddedTermuxSession(
                 }
 
                 process = pb.start()
+                stdinWriter = OutputStreamWriter(process!!.outputStream)
                 val reader = BufferedReader(InputStreamReader(process!!.inputStream))
 
                 var line: String?
@@ -83,11 +86,23 @@ class EmbeddedTermuxSession(
 
     fun stop() {
         Log.d(TAG, "Stopping session '$name'")
+        stdinWriter?.close()
+        stdinWriter = null
         process?.destroy()
         processJob?.cancel()
         processJob = null
         process = null
         _isRunning.value = false
+    }
+
+    fun sendInput(input: String) {
+        try {
+            stdinWriter?.write("$input\n")
+            stdinWriter?.flush()
+            Log.d(TAG, "Sent input to session '$name': $input")
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to send input to session '$name'", e)
+        }
     }
 
     companion object {

@@ -90,6 +90,7 @@ class ProviderEditDialog(
         val PREDEFINED_NAMES = arrayOf(
             "OpenAI",
             "Anthropic",
+            "OpenRouter",
             "DeepSeek",
             "Google Gemini",
             "Azure OpenAI",
@@ -103,6 +104,7 @@ class ProviderEditDialog(
         val PREDEFINED = listOf(
             Triple("gpt-5.4", "openai/gpt-5.4", "https://api.openai.com/v1"),
             Triple("claude-sonnet-4.6", "anthropic/claude-sonnet-4.6", "https://api.anthropic.com/v1"),
+            Triple("openrouter", "openrouter/nvidia/nemotron-3-nano-30b-a3b:free", "https://openrouter.ai/api/v1"),
             Triple("deepseek", "deepseek/deepseek-chat", ""),
             Triple("gemini", "antigravity/gemini-2.0-flash", ""),
             Triple("azure-gpt5", "azure/my-deployment", "https://your-resource.openai.azure.com"),

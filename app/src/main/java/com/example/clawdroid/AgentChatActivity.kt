@@ -29,6 +29,7 @@ import com.example.clawdroid.config.ProviderConfigManager
 import com.example.clawdroid.model.ChatMessage
 import com.example.clawdroid.model.MessageRole
 import com.example.clawdroid.model.ModelProvider
+import com.example.clawdroid.model.PickerModel
 import com.example.clawdroid.terminal.TermuxBootstrapState
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -51,7 +52,8 @@ class AgentChatActivity : AppCompatActivity() {
 
     private lateinit var toolbar: MaterialToolbar
     private lateinit var dropdownProvider: AutoCompleteTextView
-    private lateinit var dropdownModel: AutoCompleteTextView
+    private lateinit var selectedModel: TextView
+    private lateinit var layoutModelTrigger: MaterialCardView
     private lateinit var recyclerChat: RecyclerView
     private lateinit var inputMessage: TextInputEditText
     private lateinit var btnSend: FloatingActionButton
@@ -74,6 +76,7 @@ class AgentChatActivity : AppCompatActivity() {
     private var activeProvider: ModelProvider? = null
     private var activeModel: String = ""
     private val fetchedModels = mutableListOf<String>()
+    private var isExecutingCliCommand = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -81,7 +84,8 @@ class AgentChatActivity : AppCompatActivity() {
 
         toolbar = findViewById(R.id.toolbar)
         dropdownProvider = findViewById(R.id.dropdown_provider)
-        dropdownModel = findViewById(R.id.dropdown_model)
+        selectedModel = findViewById(R.id.selected_model)
+        layoutModelTrigger = findViewById(R.id.layout_model_trigger)
         recyclerChat = findViewById(R.id.recycler_chat)
         inputMessage = findViewById(R.id.input_message)
         btnSend = findViewById(R.id.btn_send)
@@ -121,6 +125,7 @@ class AgentChatActivity : AppCompatActivity() {
         }
 
         setupProviderDropdown()
+        setupModelPickerTrigger()
         setupChatRecycler()
         setupTerminalRecycler()
         setupCommandChips()
@@ -145,79 +150,125 @@ class AgentChatActivity : AppCompatActivity() {
         dropdownProvider.setOnItemClickListener { _, _, position, _ ->
             activeProvider = providers[position]
             activeModel = ""
-            dropdownModel.setText("")
+            selectedModel.text = ""
             fetchedModels.clear()
-            updateModelDropdown()
+            selectedModel.hint = getString(R.string.agent_model_hint)
             addSystemMessage("Switched provider to ${activeProvider?.modelName}")
+            fetchModelsFromProvider()
         }
 
         if (providers.isNotEmpty()) {
             activeProvider = providers[0]
             dropdownProvider.setText(activeProvider?.modelName, false)
         }
+
+        if (activeProvider?.apiBase?.isNotBlank() == true) {
+            fetchModelsFromProvider()
+        }
     }
 
-    private fun updateModelDropdown() {
+    private fun setupModelPickerTrigger() {
+        layoutModelTrigger.setOnClickListener {
+            val models = buildPickerModels()
+            val sheet = ModelPickerBottomSheet(
+                providerName = activeProvider?.modelName ?: "Unknown",
+                models = models,
+                onModelSelected = { modelId ->
+                    activeModel = modelId
+                    selectedModel.text = modelId.substringAfterLast("/")
+                    addSystemMessage("Model set to $activeModel")
+                }
+            )
+            sheet.show(supportFragmentManager, "model_picker")
+        }
+    }
+
+    private fun buildPickerModels(): List<PickerModel> {
+        val provider = activeProvider ?: return emptyList()
+        val providerSlug = provider.modelName.lowercase()
         val models = if (fetchedModels.isNotEmpty()) {
-            fetchedModels.toTypedArray()
+            fetchedModels
         } else {
-            arrayOf(activeProvider?.model?.substringAfter("/") ?: "default")
+            val fallback = provider.model.substringAfter("/")
+            if (fallback.isNotBlank()) listOf(fallback) else emptyList()
         }
-        dropdownModel.setAdapter(ArrayAdapter(this,
-            android.R.layout.simple_dropdown_item_1line, models))
-
-        dropdownModel.setOnItemClickListener { _, _, position, _ ->
-            activeModel = models[position]
-            addSystemMessage("Model set to $activeModel")
+        return models.map { id ->
+            val ctxLen = extractContextLength(id)
+            PickerModel(
+                modelId = id,
+                displayName = id,
+                providerName = provider.modelName,
+                providerSlug = providerSlug,
+                contextLength = ctxLen,
+                contextDisplay = if (ctxLen != null) formatContextLength(ctxLen) else ""
+            )
         }
+    }
 
-        if (models.isNotEmpty()) {
-            activeModel = models[0]
-            dropdownModel.setText(activeModel, false)
+    private fun extractContextLength(modelId: String): Int? = null
+
+    private fun formatContextLength(length: Int): String {
+        return when {
+            length >= 1_000_000 -> "${length / 1_000_000}M"
+            length >= 1_000 -> "${length / 1_000}K"
+            else -> length.toString()
         }
     }
 
     private fun fetchModelsFromProvider() {
         val provider = activeProvider ?: return
-        if (provider.apiBase.isBlank() && provider.apiKey.isBlank()) {
-            Toast.makeText(this, "No API endpoint to fetch models from", Toast.LENGTH_SHORT).show()
+        if (provider.apiBase.isBlank()) {
+            Toast.makeText(this, "No API endpoint configured for this provider", Toast.LENGTH_SHORT).show()
             return
         }
 
         cardTyping.isVisible = true
+        addSystemMessage("Fetching models from ${provider.modelName}...")
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val baseUrl = provider.apiBase.ifBlank { "https://api.openai.com/v1" }
-                val url = URL("$baseUrl/models")
+                val url = URL("${provider.apiBase}/models")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
                 conn.setRequestProperty("Authorization", "Bearer ${provider.apiKey}")
-                conn.connectTimeout = 5000
-                conn.readTimeout = 5000
+                conn.connectTimeout = 15000
+                conn.readTimeout = 15000
 
-                val response = conn.inputStream.bufferedReader().readText()
+                val responseCode = conn.responseCode
+                val response = if (responseCode in 200..299) {
+                    conn.inputStream.bufferedReader().readText()
+                } else {
+                    val errorBody = conn.errorStream?.bufferedReader()?.readText() ?: "No error body"
+                    conn.disconnect()
+                    withContext(Dispatchers.Main) {
+                        cardTyping.isVisible = false
+                        addSystemMessage("Model fetch failed: HTTP $responseCode — using ${provider.modelName} default")
+                    }
+                    return@launch
+                }
                 conn.disconnect()
 
                 val json = JSONObject(response)
                 val data = json.optJSONArray("data") ?: JSONArray()
                 val models = mutableListOf<String>()
                 for (i in 0 until data.length()) {
-                    data.getJSONObject(i).optString("id")?.let { models.add(it) }
+                    val id = data.getJSONObject(i).optString("id", "")
+                    if (id.isNotBlank()) models.add(id)
                 }
 
                 withContext(Dispatchers.Main) {
                     fetchedModels.clear()
-                    fetchedModels.addAll(models.take(20))
-                    updateModelDropdown()
+                    if (models.isNotEmpty()) {
+                        fetchedModels.addAll(models)
+                        addSystemMessage("Loaded ${models.size} models from ${provider.modelName}. Tap model picker to browse.")
+                    } else {
+                        addSystemMessage("No models returned from ${provider.modelName}")
+                    }
                     cardTyping.isVisible = false
-                    Toast.makeText(this@AgentChatActivity,
-                        "Fetched ${fetchedModels.size} models", Toast.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     cardTyping.isVisible = false
-                    Toast.makeText(this@AgentChatActivity,
-                        "Failed to fetch models: ${e.message}", Toast.LENGTH_SHORT).show()
+                    addSystemMessage("Could not fetch models: ${e.message} — using ${provider.modelName} default")
                 }
             }
         }
@@ -289,19 +340,24 @@ class AgentChatActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val model = activeModel.ifBlank { provider.model.substringAfter("/") }
+                val rawModel = if (activeModel.isNotBlank()) activeModel else provider.model
+                val model = resolveModelName(rawModel, provider.apiBase)
                 val baseUrl = provider.apiBase.ifBlank { "https://api.openai.com/v1" }
                 val url = URL("$baseUrl/chat/completions")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.setRequestProperty("Authorization", "Bearer ${provider.apiKey}")
+                if (baseUrl.contains("openrouter", ignoreCase = true)) {
+                    conn.setRequestProperty("HTTP-Referer", "https://clawdroid.app")
+                    conn.setRequestProperty("X-Title", "ClawDroid")
+                }
                 conn.doOutput = true
                 conn.connectTimeout = 30000
                 conn.readTimeout = 60000
 
                 val body = JSONObject().apply {
-                    put("model", if (activeModel.isNotBlank()) activeModel else provider.model)
+                    put("model", model)
                     put("messages", JSONArray().apply {
                         put(JSONObject().apply {
                             put("role", "user")
@@ -311,7 +367,18 @@ class AgentChatActivity : AppCompatActivity() {
                 }
 
                 conn.outputStream.use { it.write(body.toString().toByteArray()) }
-                val response = conn.inputStream.bufferedReader().readText()
+                val responseCode = conn.responseCode
+                val response = if (responseCode in 200..299) {
+                    conn.inputStream.bufferedReader().readText()
+                } else {
+                    val errorBody = conn.errorStream?.bufferedReader()?.readText() ?: "No error body"
+                    conn.disconnect()
+                    withContext(Dispatchers.Main) {
+                        cardTyping.isVisible = false
+                        addSystemMessage("Error: HTTP $responseCode — $errorBody")
+                    }
+                    return@launch
+                }
                 conn.disconnect()
 
                 val json = JSONObject(response)
@@ -335,11 +402,91 @@ class AgentChatActivity : AppCompatActivity() {
         }
     }
 
+    private fun resolveModelName(rawModel: String, apiBase: String): String {
+        if (apiBase.contains("openrouter", ignoreCase = true)) {
+            val stripped = rawModel.removePrefix("openrouter/")
+            return stripped
+        }
+        return rawModel
+    }
+
     private fun sendTerminalCommand(command: String) {
         if (command.isBlank()) return
         terminalLines.add("> $command")
         terminalAdapter.notifyItemInserted(terminalLines.size - 1)
         recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
+
+        executeCliCommand(command)
+    }
+
+    private fun executeCliCommand(command: String) {
+        val app = application as App
+        val binaryPath = app.getPicoClawBinaryPath()
+        if (binaryPath == null) {
+            terminalLines.add("Error: PicoClaw binary not found")
+            terminalAdapter.notifyItemInserted(terminalLines.size - 1)
+            recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
+            return
+        }
+
+        val workDir = binaryPath.substringBeforeLast("/")
+        val args = command.trim().split(Regex("\\s+"))
+
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                isExecutingCliCommand = true
+                val pb = ProcessBuilder(listOf(binaryPath) + args)
+                pb.directory(java.io.File(workDir))
+                pb.environment().putAll(app.bootstrapManager.getEnv())
+                pb.environment()["PICOCLAW_HOME"] = workDir
+                pb.redirectErrorStream(true)
+
+                val process = pb.start()
+                val reader = BufferedReader(InputStreamReader(process.inputStream))
+                var line: String?
+                val outputLines = mutableListOf<String>()
+                
+                val startTime = System.currentTimeMillis()
+                val timeout = 10000L
+                
+                while (true) {
+                    if (System.currentTimeMillis() - startTime > timeout) {
+                        process.destroy()
+                        withContext(Dispatchers.Main) {
+                            terminalLines.add("Error: Command timed out after 10s")
+                            terminalAdapter.notifyItemInserted(terminalLines.size - 1)
+                            recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
+                        }
+                        isExecutingCliCommand = false
+                        return@launch
+                    }
+                    
+                    line = reader.readLine()
+                    if (line == null) break
+                    outputLines.add(line)
+                }
+                
+                val exitCode = process.waitFor()
+
+                withContext(Dispatchers.Main) {
+                    if (outputLines.isEmpty()) {
+                        terminalLines.add("(exit code: $exitCode)")
+                    } else {
+                        terminalLines.addAll(outputLines)
+                    }
+                    terminalAdapter.notifyItemRangeInserted(terminalLines.size - outputLines.size - 1, outputLines.size + 1)
+                    recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
+                    isExecutingCliCommand = false
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    terminalLines.add("Error: ${e.message}")
+                    terminalAdapter.notifyItemInserted(terminalLines.size - 1)
+                    recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
+                    isExecutingCliCommand = false
+                }
+            }
+        }
     }
 
     private fun addSystemMessage(text: String) {
@@ -360,9 +507,11 @@ class AgentChatActivity : AppCompatActivity() {
         val app = application as App
         lifecycleScope.launch {
             app.getPicoClawSession()?.outputLines?.collect { lines ->
-                terminalLines.clear()
-                terminalLines.addAll(lines)
-                terminalAdapter.notifyDataSetChanged()
+                if (!isExecutingCliCommand) {
+                    terminalLines.clear()
+                    terminalLines.addAll(lines)
+                    terminalAdapter.notifyDataSetChanged()
+                }
                 if (terminalLines.isNotEmpty()) {
                     recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
                 }

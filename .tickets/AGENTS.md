@@ -8,15 +8,15 @@
 
 **STRICT PROJECT CONFINEMENT**
 
-- ✅ All agents **MUST** operate exclusively within the project root: `/home/linuxdev/Desktop/workshop/studio/hustle/CooperGarage/HatMountainCMS/`
+- ✅ All agents **MUST** operate exclusively within the project root: `/home/linuxdev/Desktop/workshop/studio/hustle/clawdroid/`
 - ✅ The `--slug` and all path references **MUST** resolve to this absolute project path
 - ❌ Operating outside this project directory is a **CONFIGURATION VIOLATION**
 - ❌ Using `~/.openclaw/workspace` or `/tmp` for ticket artifacts is a **VIOLATION**
 
 **Implementation:**
 
-- `spawn_agents.py` and `supervisor.py` **must** derive `PROJECT_ROOT` from the ticket script location and verify it matches the expected HatMountain path
-- Any spawned subagent task prompts **must** include: "Work in project root: /home/linuxdev/Desktop/workshop/studio/hustle/CooperGarage/HatMountainCMS/"
+- `spawn_agents.py` and `supervisor.py` **must** derive `PROJECT_ROOT` from the ticket script location and verify it matches the expected ClawDroid path
+- Any spawned subagent task prompts **must** include: "Work in project root: /home/linuxdev/Desktop/workshop/studio/hustle/clawdroid/"
 - Metrics and logs **must** be written under `.tickets/claw-agentique/` inside the project
 
 ---
@@ -105,8 +105,8 @@ When a ticket depends on work from another ticket, declare it explicitly:
 ```markdown
 ### Dependencies
 
-- **Depends on ticket-005**: Authentication must be complete before payment integration
-- **Depends on ticket-008**: Kitchen profiles needed for menu items
+- **Depends on ticket-005**: Terminal emulator must be complete before config screen
+- **Depends on ticket-008**: Server API must be stable before UI integration
 ```
 
 **Rules for Cross-Ticket Dependencies:**
@@ -184,11 +184,11 @@ Sometimes a task or acceptance criterion is not relevant or should be deferred. 
    - Replace the pending `[ ]` with `[s]`
    - Add an inline comment explaining the reason:
      ```markdown
-     - [s] Subtask 3.4: Migrate to Spatie packages  <!-- Defer: current implementation adequate -->
+     - [s] Subtask 3.4: Migrate to Hilt DI  <!-- Defer: current manual DI adequate -->
      ```
    - For acceptance criteria, same format:
      ```markdown
-     - [s] All tests pass (including invoice export tests from Ticket-018)  <!-- Waived: code changes not needed -->
+     - [s] All tests pass (including ConfigViewModel edge cases from Ticket-012)  <!-- Waived: code changes not needed -->
      ```
 
 3. **Documentation requirement:**
@@ -267,9 +267,9 @@ Each task and subtask SHOULD declare its dependencies to enable parallel executi
   - **Problem**: Need secure user authentication
   - **Test**: Users can sign up and log in
   - **Subtasks**:
-    - [ ] Subtask 1.1: Configure NextAuth.js providers
-      - **Objective**: Set up OAuth providers
-      - **Test**: Providers are configured correctly
+    - [ ] Subtask 1.1: Configure OkHttp client
+      - **Objective**: Set up HTTP client
+      - **Test**: Client connects and returns response
       - **Depends on**: None
     - [ ] Subtask 1.2: Create login page
       - **Objective**: Build login UI
@@ -380,21 +380,31 @@ The **critical path** is the longest dependency chain through the graph. It dete
 
 ## 6. AI Agent Workflow
 
-### 6.1 Task Processing
+### 6.1 Task Processing — [Plan, Code, Test] Loop
 
-1. **Discovery**: Use the find script to identify pending tasks with `[ ]` marker
-2. **Analysis**: Review problem statement and requirements
-3. **Implementation**: Complete subtask objectives
-4. **Testing**: Execute defined verification tests
-5. **Validation**: Confirm all acceptance criteria met for this subtask
-6. **Subtask Status**: Update this subtask to `[x]`
-7. **Task Closeout** (MANDATORY):
+**MANDATORY LOOP: `[Plan] → [Code] → [Test] → (fail → Code) / (pass → Commit → Next)`**
+
+Every task MUST follow this strict loop. The agent MUST execute tests itself — never defer test execution to the user.
+
+1. **Plan**: Review requirements, acceptance criteria, and existing code. Decide approach before writing any code.
+2. **Code**: Write implementation code AND test code (unit + instrumented as required by §8.4).
+3. **Test**: Execute all tests directly. If tests FAIL → go back to step 2 (Code). If tests PASS → proceed.
+4. **Validate**: Confirm all acceptance criteria met for this subtask.
+5. **Subtask Status**: Update this subtask to `[x]`.
+6. **Task Closeout** (MANDATORY):
    - After all subtasks within a Task are marked `[x]`, verify the parent Task's acceptance criteria are satisfied
    - Mark the parent Task `[x]`
    - Mark any acceptance criteria checkboxes in the PRD that are now fulfilled as `[x]`
    - This ensures progress reports accurately reflect functional completion and prevents "hanging" checklist items
-8. **Commit**: Create atomic commit with message referencing ticket and task number IMMEDIATELY upon successful verification and closeout
-9. **Report**: Log completion and move to next pending task
+7. **Commit**: Create atomic commit with message referencing ticket and task number IMMEDIATELY upon successful verification and closeout
+8. **Report**: Log completion and move to next pending task
+
+**CRITICAL RULE — Agent Must Test, Never Defer:**
+
+- ❌ NEVER tell the user to "run tests manually" or "verify by running X command"
+- ❌ NEVER mark a task `[x]` without having executed the tests yourself
+- ✅ ALWAYS run `make test-unit-debug`, `make lint`, and `make build-debug` (at minimum) before marking complete
+- ✅ If a test cannot run (e.g., no emulator for instrumented tests), mark the test task as `[s]` with explicit justification, or add a QA checklist step — do not silently skip
 
 ### 6.2 Completion and Exit Conditions
 
@@ -499,59 +509,58 @@ After completing all subtasks for a Task, agents MUST perform a full closeout:
 - Test integration scenarios
 - Ensure tests are idempotent where possible
 
-### 8.2 Browser-Based Testing (E2E) Requirements
+### 8.2 Instrumented Testing (UI/E2E) Requirements
 
-**CRITICAL: All UI-related tasks MUST include browser-based E2E tests using Playwright.**
+**CRITICAL: All UI-related tasks MUST include instrumented tests using Espresso.**
 
 #### Mandatory Testing Workflow
 
-1. **Write E2E tests BEFORE implementation** (TDD approach)
-2. **Tests must verify actual browser behavior**, not just API responses
-3. **Use the browser skill** or Playwright container on `hatmountaincms_default` network
-4. **Test against real app** at `http://app:8000` (not mocked)
+1. **Write instrumented tests BEFORE implementation** (TDD approach) where practical
+2. **Tests must verify actual UI behavior**, not just state
+3. **Use Espresso matchers** for view assertions (`onView(withId(...))`)
+4. **Test on emulator** via `./gradlew connectedAndroidTest` (inside Docker build container)
 
-#### E2E Test Coverage Requirements
+#### Instrumented Test Coverage Requirements
 
 For any UI-related task, you MUST create tests that verify:
 
 | Test Type | Requirement |
 |-----------|-------------|
-| Page Load | Page renders without console errors |
-| Content Display | Expected elements are visible |
-| Interactive Elements | Buttons, links, forms work correctly |
-| Data Loading | Widgets/APIs load data within timeout |
-| Error Handling | Graceful error states display properly |
-| Styling | CSS loads and applies correctly |
-| Livewire Components | Livewire initializes and functions |
+| Activity Launch | Activity renders without crash |
+| Layout Inflation | Expected views are displayed |
+| Interactive Elements | Buttons, text fields, lists work correctly |
+| Navigation | Intents fire, target activities open |
+| Error Handling | Error states display properly (Snackbar/Toast) |
+| Configuration Persistence | Values survive process death |
+| Multi-screen Flows | Full user journeys work end-to-end |
 
-#### Running E2E Tests
+#### Running Instrumented Tests
 
 ```bash
-# Run all tests
-docker run --rm -v $(pwd):/workspace -w /workspace/.tickets/ticket-025-e2e-coverage \
-  --network hatmountaincms_default -e BASE_URL=http://app:8000 \
-  mcr.microsoft.com/playwright:v1.58.0 npx playwright test --reporter=list
+# Run all instrumented tests (requires connected emulator)
+make test-integration                  # ./gradlew connectedAndroidTest
 
-# Run specific test file
-docker run --rm -v $(pwd):/workspace -w /workspace/.tickets/ticket-025-e2e-coverage \
-  --network hatmountaincms_default -e BASE_URL=http://app:8000 \
-  mcr.microsoft.com/playwright:v1.58.0 npx playwright test e2e/dashboard.spec.ts
+# Run specific test class
+docker compose exec build ./gradlew connectedAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=com.example.clawdroid.MainActivityTest
+
+# Run unit tests (no emulator required)
+make test-unit-debug                   # ./gradlew testDebugUnitTest
 ```
 
 #### Test File Naming Convention
 
-- Place E2E tests in `.tickets/ticket-XXX-name/e2e/` directory
-- Name files: `feature-name.spec.ts`
-- Use descriptive test names that explain what is being verified
+- Place instrumented tests in `app/src/androidTest/java/com/example/clawdroid/`
+- Name files: `{ScreenName}Test.kt`
+- Use descriptive test method names following `{methodName}_{scenario}_{expectedResult}`
 
 ### 8.3 Verification Process
 
-1. Execute all defined tests for subtask (unit AND E2E)
+1. Execute all defined tests for subtask (unit AND instrumented)
 2. Validate against acceptance criteria
 3. Confirm no regressions introduced
-4. Verify code quality standards
+4. Verify code quality standards (`make lint`)
 5. Document test results
-6. **Run E2E tests to verify UI functionality**
+6. **Run instrumented tests for UI verification** (if emulator available) or mark manual QA
 7. Update status to `[x]` only after ALL tests pass
 
 ### 8.4 Ticket Testing Requirements
@@ -565,9 +574,9 @@ Every ticket MUST include testing appropriate to its tasks. The required test ty
 | ViewModels, state management | Unit tests | State transitions, action handlers |
 | UI layouts, Activities, Fragments | Instrumented tests (Espresso) | Layout inflates, views display, buttons click |
 | Navigation between screens | Instrumented tests | Intent fires, target activity opens |
-| API endpoints, HTTP routing | Unit tests + Instrumented tests | Response bodies, status codes |
+| HTTP server endpoints (NanoHTTPD) | Unit tests | Response bodies, status codes, headers |
 | Static asset serving, MIME types | Unit tests | Correct content type, 404 handling |
-| Process lifecycle, session management | Unit tests | Start/stop transitions, error states |
+| Process lifecycle, terminal session | Unit tests | Start/stop transitions, error states |
 | Download/extraction operations | Unit tests (mock network) | Progress callbacks, error handling, retry |
 | Architecture detection, platform queries | Unit tests | Correct value returned for each platform |
 | Configuration persistence | Instrumented tests | Values survive process death |
@@ -584,7 +593,7 @@ Every ticket MUST include testing appropriate to its tasks. The required test ty
    - Document a timeline/deferred ticket for later implementation
 5. **Unit tests are mandatory** for all business logic (repositories, ViewModels, managers, sessions). Only pure UI configuration (layouts, themes, colors) is exempt.
 6. **Instrumented tests are mandatory** for any UI that the user interacts with (activities, fragments, dialogs, navigation).
-7. **Full quality check must pass** before a ticket is marked complete: `lint + test + assembleDebug` must all exit 0.
+7. **Full quality check must pass** before a ticket is marked complete: `make quality-check` (lint + test + assembleDebug) must exit 0.
 8. **Tickets implementing new features must add new test files** — modifying existing tests is insufficient unless the task scope is a refactor of existing code.
 9. **Build verification alone is NOT testing.** A task that says "verify it compiles" does not satisfy the testing requirement — functional assertions are needed.
 
@@ -613,14 +622,16 @@ Every ticket MUST include testing appropriate to its tasks. The required test ty
 
 When troubleshooting issues:
 
-- **Inspect container logs**: `docker compose logs app` or `docker compose exec app tail -f storage/logs/laravel.log`
-- **Check Laravel logs**: View `storage/logs/laravel.log` inside the app container
-- **Use Artisan Tinker**: `docker compose exec app php artisan tinker` for interactive testing
-- **Debug rate limiting**: Verify cache store with `config('cache.default')` and test `RateLimiter::attempts($key)`
-- **Test Redis connectivity**: `docker compose exec app php artisan tinker --execute="Cache::store('redis')->put('test','ok',60); echo Cache::store('redis')->get('test');"`
-- **Review middleware**: Ensure tenant identification middleware is configured correctly for test environments
-- **Clear caches**: `php artisan optimize:clear`, `php artisan route:clear`, `php artisan config:clear`
-- **Dump and die**: Use `dd()` or `dump()` to inspect data within controllers/requests
+- **Check build output**: `docker compose exec build ./gradlew assembleDebug` — look for compilation errors
+- **View logcat output**: `docker compose exec build adb logcat -s ClawDroid:* *:S` (filter by tag)
+- **Use Android Studio Profiler**: Connect to emulator/device and inspect CPU, memory, network
+- **Debug with breakpoints**: Run `./gradlew installDebug` and attach Android Studio debugger
+- **Check lint warnings**: `make lint` — catches common issues before runtime
+- **Enable verbose logging**: Add `Log.d(TAG, message)` calls and filter via `adb logcat -s TAG:D`
+- **Inspect database**: Pull the app DB: `adb exec-out run-as com.example.clawdroid cat databases/clawdroid.db > /tmp/clawdroid.db`
+- **Test network requests**: Use `adb reverse tcp:8080 tcp:8080` for local server testing
+- **Verify emulator connectivity**: `adb devices` should list the emulator as `device`
+- **Check APK contents**: `unzip -l app/build/outputs/apk/debug/app-debug.apk | grep picoclaw` to verify assets
 
 ---
 
@@ -798,15 +809,15 @@ git log --oneline | grep -c "$(grep -B2 '\[x\]' .tickets/*/prd.md | grep -E 'Tas
 - **Web Server**: NanoHTTPD embedded HTTP server
 - **Terminal**: Embedded Termux bootstrap (self-hosted, no external app required)
 
-### Development Commands
+### Development Commands (ALL inside Docker via `make`)
 
-- Build debug APK: `./gradlew assembleDebug`
-- Build release APK: `./gradlew assembleRelease`
-- Run unit tests: `./gradlew test`
-- Run instrumented tests: `./gradlew connectedAndroidTest`
-- Run lint: `./gradlew lint`
-- Clean build: `./gradlew clean`
-- Full quality check: `./gradlew lint && ./gradlew test && ./gradlew assembleDebug`
+- Build debug APK: `make build-debug`
+- Build release APK: `make build-release`
+- Run unit tests: `make test-unit-debug`
+- Run instrumented tests: `make test-integration`
+- Run lint: `make lint`
+- Clean build: `make clean`
+- Full quality check: `make quality-check`
 
 ### Emulator/Environment
 
@@ -872,17 +883,18 @@ Each agent-history file should document the subagent's work chronologically:
 ### 2025-03-17 10:15:00 - Start ( Agent: kilo_kilo_auto_free )
 - Assigned task: Implement login validation subtask
 - Read prd.md and reviewed task requirements
-- Reviewed existing validation code in app/Http/Controllers/AuthController.php
+- Reviewed existing validation code in app/src/main/java/com/example/clawdroid/server/MissionControlServer.kt
 
 ### 2025-03-17 10:30:00 - Implementation ( Agent: kilo_kilo_auto_free )
-- Added validateLogin method with email and password validation
-- Included rate limiting check using Laravel's ThrottleRequests
-- Updated login form with CSRF token
+- Added ConfigViewModel with state management for settings
+- Implemented save/load logic using SharedPreferences
+- Wired up data binding in fragment_config.xml
 
 ### 2025-03-17 11:00:00 - Testing ( Agent: kilo_kilo_auto_free )
-- Ran php artisan test tests/Feature/LoginTest.php
+- Ran ./gradlew testDebugUnitTest
 - All tests passed (5/5)
-- Manually tested login form in browser
+- Ran ./gradlew connectedAndroidTest (ConfigViewModelTest)
+- All instrumented tests passed
 
 ### 2025-03-17 11:45:00 - Completion ( Agent: kilo_kilo_auto_free )
 - Verified all acceptance criteria met
@@ -894,9 +906,10 @@ Each agent-history file should document the subagent's work chronologically:
 - None
 
 ## Files Modified
-- app/Http/Controllers/AuthController.php
-- resources/views/auth/login.blade.php
-- database/migrations/2025_03_17_110000_add_rate_limit_to_logins_table.php
+- app/src/main/java/com/example/clawdroid/config/ConfigViewModel.kt
+- app/src/main/java/com/example/clawdroid/config/ConfigFragment.kt
+- app/src/main/res/layout/fragment_config.xml
+- app/src/main/res/values/strings.xml
 ```
 
 ### Agent-History File Content Requirements
@@ -939,10 +952,10 @@ The main agent MUST respawn it with a fresh agent, preserving the same task assi
 
 This policy supersedes any implicit sequential ordering in PRD documents; always analyze for independence first.
 
-## 11. HatMountain Queue Workflow
+## 11. ClawDroid Queue Workflow
 
 ### 11.1 Overview
-The HatMountain system processes tickets in a strict pipeline. A queue tick (triggered regularly or manually) checks for the next available subtask and spawns sub‑agents to work on them, up to a maximum of 6 concurrent agents.
+The ClawDroid system processes tickets in a strict pipeline. A queue tick (triggered regularly or manually) checks for the next available subtask and spawns sub‑agents to work on them, up to a maximum of 6 concurrent agents.
 
 ### 11.2 Finding Next Subtask
 - The script `.tickets/scripts/find_next_ticket.sh` scans all PRDs for the first unstarted item marked `[ ]` (unchecked) and prints its ticket and line number.
@@ -996,7 +1009,7 @@ The HatMountain system processes tickets in a strict pipeline. A queue tick (tri
 - Counts are cumulative and not cleared on success (for process review and refinement).
 
 ### 11.8 Dependent Ticket Order
-- Tickets must generally be processed in ascending numerical order because later tickets depend on earlier foundations (e.g., multi‑tenancy before contract management).
+- Tickets must generally be processed in ascending numerical order because later tickets depend on earlier foundations (e.g., project scaffold before terminal integration).
 - The queue scanner respects this by not offering subtasks from higher‑numbered tickets if any `[ ]` remains in a lower‑numbered ticket **unless** those lower tickets are blocked by true dependencies (e.g., missing code). In practice, we manually track dependency readiness and may need to mark subtasks as `[ ]` only when their prerequisites are truly met.
 
 ### 11.9 Notes

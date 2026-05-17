@@ -126,4 +126,20 @@
     <string name="terminal_title">PicoClaw Terminal</string>
     <string name="terminal_toggle_desc">Toggle terminal</string>
     <string name="terminal_input_hint">Send command…</string>
+
+    <!-- Model Picker -->
+    <string name="model_picker_title">Select Model</string>
+    <string name="model_picker_search_hint">Search models…</string>
+    <string name="model_picker_close_desc">Close</string>
+    <string name="model_picker_select">Select</string>
+    <string name="model_picker_select_desc">Select this model</string>
+    <string name="model_picker_pin_desc">Pin model</string>
+    <string name="model_picker_recent_title">Recently Used</string>
+    <string name="model_picker_sort_recent">Recent</string>
+    <string name="model_picker_sort_alpha">A–Z</string>
+    <string name="model_picker_sort_context">Context</string>
+    <string name="model_picker_no_models">No models loaded</string>
+    <string name="model_picker_fetch">Fetch Models</string>
+    <string name="model_picker_no_results">No matching models</string>
+    <string name="model_picker_footer_template">%1$d models · %2$s</string>
 </resources>
