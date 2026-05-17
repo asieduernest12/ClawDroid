@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClawDroid Mission Control</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>ClawDroid Mission Control</h1>
+            <span class="status-badge" id="connection-status">Connecting...</span>
+        </header>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2>Server Status</h2>
+                <div class="stat">
+                    <span class="label">Status:</span>
+                    <span class="value" id="server-status">-</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Uptime:</span>
+                    <span class="value" id="uptime">-</span>
+                </div>
+                <div class="stat">
+                    <span class="label">Port:</span>
+                    <span class="value" id="port">-</span>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>PicoClaw</h2>
+                <div class="stat">
+                    <span class="label">Running:</span>
+                    <span class="value" id="nano-status">-</span>
+                </div>
+                <div class="actions">
+                    <button id="start-btn" class="btn btn-primary">Start</button>
+                    <button id="stop-btn" class="btn btn-danger">Stop</button>
+                </div>
+            </div>
+
+            <div class="card full-width">
+                <h2>Quick Links</h2>
+                <div class="links">
+                    <a href="/api/health" target="_blank" class="link">Health API</a>
+                    <a href="/api/status" target="_blank" class="link">Status API</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
