@@ -31,6 +31,16 @@
             android:name=".config.ConfigActivity"
             android:exported="false"
             android:theme="@style/Theme.ClawDroid" />
+
+        <activity
+            android:name=".MissionControlActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ClawDroid" />
+
+        <activity
+            android:name=".LogViewerActivity"
+            android:exported="false"
+            android:theme="@style/Theme.ClawDroid" />
     </application>
 
 </manifest>

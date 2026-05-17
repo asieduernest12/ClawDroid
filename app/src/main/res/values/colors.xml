@@ -11,4 +11,16 @@
     <color name="on_secondary">#FF000000</color>
     <color name="on_background">#FF1C1B1F</color>
     <color name="on_surface">#FF1C1B1F</color>
+
+    <!-- Semantic Status Colors -->
+    <color name="status_running">#FF2E7D32</color>
+    <color name="status_stopped">#FFC62828</color>
+    <color name="status_loading">#FFF9A825</color>
+    <color name="status_offline">#FF757575</color>
+    <color name="status_online">#FF2E7D32</color>
+    <color name="status_error">#FFD32F2F</color>
+
+    <!-- Surface variants for card depth -->
+    <color name="surface_variant">#FFE7E0EC</color>
+    <color name="on_surface_variant">#FF49454F</color>
 </resources>

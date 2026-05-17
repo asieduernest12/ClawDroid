@@ -22,10 +22,10 @@ class TerminalScenario {
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
 
     @Test
-    fun givenFirstLaunch_whenBootstrapCompletes_thenTermuxEnvironmentReadyDisplayed() {
+    fun givenFirstLaunch_whenBootstrapCompletes_thenReadyChipDisplayed() {
         val ready = AppStage.waitForBootstrap()
         assertTrue("Bootstrap should complete within timeout", ready)
-        onView(withText("Termux environment ready"))
+        onView(withText("Ready"))
             .check(matches(isDisplayed()))
     }
 
@@ -52,13 +52,13 @@ class TerminalScenario {
     }
 
     @Test
-    fun givenSecondLaunch_whenBootstrapAlreadyCached_thenReadyAppearsImmediately() {
+    fun givenSecondLaunch_whenBootstrapAlreadyCached_thenReadyChipDisplayed() {
         AppStage.waitForBootstrap()
         activityRule.scenario.close()
         ActivityScenario.launch(MainActivity::class.java).use {
             val ready = AppStage.waitForBootstrap(30000)
             assertTrue("Cached bootstrap should be ready quickly", ready)
-            onView(withText("Termux environment ready"))
+            onView(withText("Ready"))
                 .check(matches(isDisplayed()))
         }
     }

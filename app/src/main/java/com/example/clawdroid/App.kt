@@ -49,7 +49,7 @@ class App : Application() {
         serverManager.start()
     }
 
-    private fun initializeTermux() {
+    fun initializeTermux() {
         appScope.launch {
             _bootstrapState.value = TermuxBootstrapState.Checking
 
@@ -94,7 +94,8 @@ class App : Application() {
     fun createPicoClawSession(): EmbeddedTermuxSession {
         picoclawSession?.stop()
         val env = bootstrapManager.getEnv()
-        val session = EmbeddedTermuxSession("picoclaw", env, appScope)
+        val logFile = File(filesDir, "picoclaw.log")
+        val session = EmbeddedTermuxSession("picoclaw", env, appScope, logFile)
         picoclawSession = session
         return session
     }

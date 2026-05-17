@@ -9,5 +9,15 @@
         <item name="android:colorBackground">@color/background</item>
         <item name="colorSurface">@color/surface</item>
         <item name="colorOnSurface">@color/on_surface</item>
+
+        <!-- Error palette -->
+        <item name="colorError">@color/status_error</item>
+        <item name="colorOnError">@android:color/white</item>
+        <item name="colorErrorContainer">#FFF9DEDC</item>
+        <item name="colorOnErrorContainer">#FF410E0B</item>
+
+        <!-- Surface variants -->
+        <item name="colorSurfaceVariant">@color/surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
     </style>
 </resources>

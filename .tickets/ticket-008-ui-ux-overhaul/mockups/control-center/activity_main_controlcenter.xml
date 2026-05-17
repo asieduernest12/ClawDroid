@@ -1,0 +1,566 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Control Center Mockup Layout for ClawDroid MainActivity
+  Design: iOS Control Center / Android Quick Settings inspired dashboard
+  Features:
+   - SwipeRefreshLayout for pull-to-refresh
+   - Large status tiles with icon+text combinations
+   - Circular toggle buttons (Start/Stop) + rounded-rect Restart
+   - Network-style server tile with signal-strength bars
+   - Thick Material progress indicator for bootstrap
+   - Bottom sheet trigger for logs
+   - State-aware gradient background that shifts per app state
+-->
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/swipe_refresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:contentDescription="@string/desc_pull_to_refresh">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:fillViewport="true"
+        android:clipToPadding="false"
+        android:paddingBottom="24dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/control_center_root"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <!-- ========================================= -->
+            <!-- HEADER: App title + ambient state glow    -->
+            <!-- ========================================= -->
+            <TextView
+                android:id="@+id/header_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/app_name"
+                android:textAppearance="@style/TextAppearance.Material3.DisplaySmall"
+                android:textStyle="bold"
+                android:textColor="@color/on_background"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="8dp" />
+
+            <TextView
+                android:id="@+id/header_subtitle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/header_subtitle"
+                android:textAppearance="@style/TextAppearance.Material3.BodyLarge"
+                android:textColor="@color/on_surface_variant"
+                app:layout_constraintTop_toBottomOf="@id/header_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="4dp" />
+
+            <!-- ========================================= -->
+            <!-- STATUS TILE: PicoClaw state               -->
+            <!-- Background changes dynamically via code:  -->
+            <!--   stopped=#FFECEFF1, running=#FFE8F5E9  -->
+            <!--   starting=#FFFFF3E0, error=#FFFFEBEE    -->
+            <!-- ========================================= -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/status_tile"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/tile_status_stopped"
+                app:layout_constraintTop_toBottomOf="@id/header_subtitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="20dp">
+
+                    <!-- Large status dot -->
+                    <View
+                        android:id="@+id/status_dot"
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:background="@drawable/bg_status_dot"
+                        android:backgroundTint="@color/status_dot_stopped"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <TextView
+                        android:id="@+id/status_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/status_label_picoclaw"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                        android:textColor="@color/on_surface_variant"
+                        app:layout_constraintStart_toEndOf="@id/status_dot"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:layout_marginStart="16dp" />
+
+                    <TextView
+                        android:id="@+id/status_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/picoclaw_status_stopped"
+                        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_background"
+                        app:layout_constraintStart_toEndOf="@id/status_dot"
+                        app:layout_constraintTop_toBottomOf="@id/status_label"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="2dp" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ========================================= -->
+            <!-- ROW: Bootstrap tile | Server/Network tile -->
+            <!-- ========================================= -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/bootstrap_tile"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/tile_bootstrap"
+                app:layout_constraintTop_toBottomOf="@id/status_tile"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/server_tile"
+                app:layout_constraintHorizontal_weight="1">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:id="@+id/bootstrap_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_bootstrap"
+                        android:contentDescription="@string/desc_bootstrap_icon"
+                        app:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/bootstrap_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/bootstrap_label"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                        android:textColor="@color/on_surface_variant"
+                        app:layout_constraintStart_toEndOf="@id/bootstrap_icon"
+                        app:layout_constraintTop_toTopOf="@id/bootstrap_icon"
+                        app:layout_constraintBottom_toBottomOf="@id/bootstrap_icon"
+                        android:layout_marginStart="8dp" />
+
+                    <TextView
+                        android:id="@+id/bootstrap_status_text"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="@string/bootstrap_initializing"
+                        android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+                        android:textColor="@color/on_background"
+                        android:maxLines="2"
+                        android:ellipsize="end"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/bootstrap_icon"
+                        android:layout_marginTop="10dp" />
+
+                    <!-- Thick, highly-visible progress bar -->
+                    <com.google.android.material.progressindicator.LinearProgressIndicator
+                        android:id="@+id/bootstrap_progress"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:indicatorColor="@color/primary"
+                        app:trackColor="@color/progress_track"
+                        app:trackThickness="8dp"
+                        app:trackCornerRadius="4dp"
+                        android:indeterminate="true"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/bootstrap_status_text"
+                        android:layout_marginTop="10dp" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- SERVER / NETWORK TILE -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/server_tile"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginStart="6dp"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/tile_server"
+                app:layout_constraintTop_toBottomOf="@id/status_tile"
+                app:layout_constraintStart_toEndOf="@id/bootstrap_tile"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/bootstrap_tile"
+                app:layout_constraintHorizontal_weight="1">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:padding="16dp">
+
+                    <ImageView
+                        android:id="@+id/server_icon"
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:src="@drawable/ic_server"
+                        android:contentDescription="@string/desc_server_icon"
+                        app:tint="@color/primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/server_label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_label"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                        android:textColor="@color/on_surface_variant"
+                        app:layout_constraintStart_toEndOf="@id/server_icon"
+                        app:layout_constraintTop_toTopOf="@id/server_icon"
+                        app:layout_constraintBottom_toBottomOf="@id/server_icon"
+                        android:layout_marginStart="8dp" />
+
+                    <TextView
+                        android:id="@+id/server_port"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textAppearance="@style/TextAppearance.Material3.HeadlineSmall"
+                        android:textStyle="bold"
+                        android:textColor="@color/on_background"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/server_icon"
+                        android:layout_marginTop="4dp" />
+
+                    <!-- Signal-strength health indicator -->
+                    <LinearLayout
+                        android:id="@+id/signal_bars"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="bottom"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@id/server_port"
+                        android:layout_marginTop="8dp">
+
+                        <View
+                            android:id="@+id/bar_1"
+                            android:layout_width="6dp"
+                            android:layout_height="8dp"
+                            android:layout_marginEnd="2dp"
+                            android:background="@drawable/bg_signal_bar"
+                            android:backgroundTint="@color/signal_inactive" />
+
+                        <View
+                            android:id="@+id/bar_2"
+                            android:layout_width="6dp"
+                            android:layout_height="12dp"
+                            android:layout_marginEnd="2dp"
+                            android:background="@drawable/bg_signal_bar"
+                            android:backgroundTint="@color/signal_inactive" />
+
+                        <View
+                            android:id="@+id/bar_3"
+                            android:layout_width="6dp"
+                            android:layout_height="16dp"
+                            android:layout_marginEnd="2dp"
+                            android:background="@drawable/bg_signal_bar"
+                            android:backgroundTint="@color/signal_inactive" />
+
+                        <View
+                            android:id="@+id/bar_4"
+                            android:layout_width="6dp"
+                            android:layout_height="20dp"
+                            android:background="@drawable/bg_signal_bar"
+                            android:backgroundTint="@color/signal_inactive" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/server_health"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/server_health_unknown"
+                        android:textAppearance="@style/TextAppearance.Material3.LabelSmall"
+                        android:textColor="@color/on_surface_variant"
+                        app:layout_constraintStart_toEndOf="@id/signal_bars"
+                        app:layout_constraintBottom_toBottomOf="@id/signal_bars"
+                        android:layout_marginStart="8dp" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ========================================= -->
+            <!-- PRIMARY CONTROLS: Start / Stop / Restart  -->
+            <!-- Large circular toggles + rounded rect       -->
+            <!-- ========================================= -->
+            <TextView
+                android:id="@+id/controls_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/controls_label"
+                android:textAppearance="@style/TextAppearance.Material3.LabelLarge"
+                android:textColor="@color/on_surface_variant"
+                app:layout_constraintTop_toBottomOf="@id/bootstrap_tile"
+                app:layout_constraintStart_toStartOf="parent"
+                android:layout_marginTop="24dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn_start"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="36dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/toggle_start"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/btn_start"
+                app:layout_constraintTop_toBottomOf="@id/controls_label"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btn_stop"
+                app:layout_constraintHorizontal_chainStyle="spread">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_play"
+                    android:contentDescription="@null"
+                    app:tint="@color/white" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/label_start"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_start_short"
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                android:textColor="@color/on_surface_variant"
+                app:layout_constraintTop_toBottomOf="@id/btn_start"
+                app:layout_constraintStart_toStartOf="@id/btn_start"
+                app:layout_constraintEnd_toEndOf="@id/btn_start"
+                android:layout_marginTop="6dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn_stop"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="36dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/toggle_stop"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/btn_stop"
+                app:layout_constraintTop_toBottomOf="@id/controls_label"
+                app:layout_constraintStart_toEndOf="@id/btn_start"
+                app:layout_constraintEnd_toStartOf="@id/btn_restart">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_stop"
+                    android:contentDescription="@null"
+                    app:tint="@color/white" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/label_stop"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_stop_short"
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                android:textColor="@color/on_surface_variant"
+                app:layout_constraintTop_toBottomOf="@id/btn_stop"
+                app:layout_constraintStart_toStartOf="@id/btn_stop"
+                app:layout_constraintEnd_toEndOf="@id/btn_stop"
+                android:layout_marginTop="6dp" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn_restart"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginTop="12dp"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="4dp"
+                app:cardBackgroundColor="@color/toggle_restart"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:contentDescription="@string/btn_restart"
+                app:layout_constraintTop_toBottomOf="@id/controls_label"
+                app:layout_constraintStart_toEndOf="@id/btn_stop"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <ImageView
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/ic_restart"
+                    android:contentDescription="@null"
+                    app:tint="@color/white" />
+            </com.google.android.material.card.MaterialCardView>
+
+            <TextView
+                android:id="@+id/label_restart"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_restart_short"
+                android:textAppearance="@style/TextAppearance.Material3.LabelMedium"
+                android:textColor="@color/on_surface_variant"
+                app:layout_constraintTop_toBottomOf="@id/btn_restart"
+                app:layout_constraintStart_toStartOf="@id/btn_restart"
+                app:layout_constraintEnd_toEndOf="@id/btn_restart"
+                android:layout_marginTop="6dp" />
+
+            <!-- ========================================= -->
+            <!-- SECONDARY ACTIONS: Mission Control + Logs   -->
+            <!-- ========================================= -->
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn_mission_control"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginEnd="6dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/tile_mission_control"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:contentDescription="@string/btn_mission_control"
+                app:layout_constraintTop_toBottomOf="@id/label_start"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btn_view_logs">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <ImageView
+                        android:id="@+id/mission_icon"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_dashboard"
+                        android:contentDescription="@null"
+                        app:tint="@color/on_primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_mission_control"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        android:textColor="@color/on_primary"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toEndOf="@id/mission_icon"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:layout_marginStart="12dp" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/btn_view_logs"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_marginTop="32dp"
+                android:layout_marginStart="6dp"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="2dp"
+                app:cardBackgroundColor="@color/tile_logs"
+                app:strokeWidth="0dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:foreground="?attr/selectableItemBackground"
+                android:contentDescription="@string/btn_view_logs"
+                app:layout_constraintTop_toBottomOf="@id/label_start"
+                app:layout_constraintStart_toEndOf="@id/btn_mission_control"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp">
+
+                    <ImageView
+                        android:id="@+id/logs_icon"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:src="@drawable/ic_logs"
+                        android:contentDescription="@null"
+                        app:tint="@color/on_primary"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/btn_view_logs"
+                        android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
+                        android:textColor="@color/on_primary"
+                        android:textStyle="bold"
+                        app:layout_constraintStart_toEndOf="@id/logs_icon"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:layout_marginStart="12dp" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ========================================= -->
+            <!-- BOTTOM: Settings (text button)            -->
+            <!-- ========================================= -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_settings"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/btn_settings"
+                android:textColor="@color/on_surface_variant"
+                app:icon="@drawable/ic_settings"
+                app:iconTint="@color/on_surface_variant"
+                app:layout_constraintTop_toBottomOf="@id/btn_mission_control"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:layout_marginTop="24dp" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

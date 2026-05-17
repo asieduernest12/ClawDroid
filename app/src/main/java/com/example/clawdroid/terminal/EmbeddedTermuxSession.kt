@@ -16,7 +16,8 @@ import java.io.File
 class EmbeddedTermuxSession(
     val name: String,
     private val env: Map<String, String>,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val logFile: File? = null
 ) {
     private val _isRunning = MutableStateFlow(false)
     val isRunning: StateFlow<Boolean> = _isRunning.asStateFlow()
@@ -62,6 +63,7 @@ class EmbeddedTermuxSession(
                 var line: String?
                 while (reader.readLine().also { line = it } != null && isActive) {
                     _outputLines.value = _outputLines.value + line!!
+                    logFile?.appendText("${line!!}\n")
                 }
 
                 val code = process!!.waitFor()

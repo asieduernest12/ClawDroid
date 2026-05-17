@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Color resources required for the Minimalist Terminal design.
+    These should be merged into app/src/main/res/values/colors.xml
+    and referenced by the new layout (activity_main_terminal.xml).
+
+    Palette: AMOLED-safe darks + neon accents for high contrast
+    and reduced eye strain during long sessions.
+-->
+<resources>
+    <!-- Core backgrounds -->
+    <color name="terminal_black">#FF000000</color>
+    <color name="terminal_console_bg">#FF0A0A0A</color>
+    <color name="terminal_console_header_bg">#FF111111</color>
+    <color name="terminal_bar_bg">#FF111111</color>
+
+    <!-- Foreground / text -->
+    <color name="terminal_white">#FFE0E0E0</color>
+    <color name="terminal_gray">#FF808080</color>
+    <color name="terminal_dim_gray">#FF404040</color>
+
+    <!-- Neon accents (semantic) -->
+    <color name="terminal_green">#FF00FF41</color>   <!-- Running / OK / Healthy -->
+    <color name="terminal_red">#FFFF3131</color>     <!-- Stopped / Error / Critical -->
+    <color name="terminal_cyan">#FF00F0FF</color>    <!-- Info / Links / Header -->
+    <color name="terminal_yellow">#FFF0E100</color>  <!-- Warning / Restart / In-progress -->
+    <color name="terminal_magenta">#FFFF00FF</color> <!-- Debug / secondary highlight (reserved) -->
+
+    <!--
+        Optional: if you want to override the app theme for this screen,
+        add the following to themes.xml (night or main):
+
+        <style name="Theme.ClawDroid.Terminal" parent="Theme.Material3.Dark.NoActionBar">
+            <item name="android:windowBackground">@color/terminal_black</item>
+            <item name="android:statusBarColor">@color/terminal_black</item>
+            <item name="android:navigationBarColor">@color/terminal_bar_bg</item>
+            <item name="colorPrimary">@color/terminal_cyan</item>
+            <item name="colorOnPrimary">@color/terminal_black</item>
+            <item name="colorSecondary">@color/terminal_green</item>
+            <item name="android:textColorPrimary">@color/terminal_white</color>
+        </style>
+    -->
+</resources>

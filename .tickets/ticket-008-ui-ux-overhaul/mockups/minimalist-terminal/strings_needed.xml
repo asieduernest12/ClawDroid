@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    String resources required for the Minimalist Terminal design.
+    These should be merged into app/src/main/res/values/strings.xml.
+
+    Design notes:
+    - Labels are SHORT and UPPERCASE to fit the compact command-bar.
+    - Status strings include bracket prefixes so Kotlin code can swap
+      the entire line colour via Spannable or pre-formatted strings.
+    - Log console strings are minimal; most log content is pushed
+      programmatically from the PicoClaw process stdout/stderr.
+-->
+<resources>
+    <!-- Application / Header -->
+    <string name="terminal_header">>_ CLAWDROID</string>
+    <string name="terminal_version_suffix">v1.0</string>
+
+    <!-- Bootstrap / Termux Status Lines (bracket-prefixed for terminal aesthetic) -->
+    <string name="status_termux_initializing">[ >> ] Initializing Termux environment…</string>
+    <string name="status_termux_checking">[ :: ] Setting up Termux environment…</string>
+    <string name="status_termux_extracting">[ :: ] Extracting Termux environment…</string>
+    <string name="status_termux_ready">[ OK ] Termux environment ready</string>
+    <string name="status_termux_error">[ !! ] Bootstrap error: %s</string>
+
+    <!-- PicoClaw Process Status Lines -->
+    <string name="picoclaw_status_stopped">[ !! ] PicoClaw: Stopped</string>
+    <string name="picoclaw_status_running">[ OK ] PicoClaw: Running</string>
+    <string name="picoclaw_status_starting">[ >> ] PicoClaw: Starting…</string>
+    <string name="picoclaw_status_stopping">[ >> ] PicoClaw: Stopping…</string>
+
+    <!-- Server Status Line -->
+    <string name="server_status">[ :: ] Server: http://localhost:%1$d</string>
+    <string name="server_status_unavailable">[ :: ] Server: unavailable</string>
+    <string name="server_health_healthy">HEALTHY</string>
+    <string name="server_health_degraded">DEGRADED</string>
+
+    <!-- Command Bar Labels (short, uppercase, icon-accompanied) -->
+    <string name="cmd_start">Start</string>
+    <string name="cmd_stop">Stop</string>
+    <string name="cmd_restart">Restart</string>
+    <string name="cmd_dashboard">Dashboard</string>
+    <string name="cmd_logs">Logs</string>
+    <string name="cmd_settings">Config</string>
+
+    <!-- Hints / Interactive prompts -->
+    <string name="hint_default">>_ Ready for commands</string>
+    <string name="hint_start_to_begin">>_ Press START to launch PicoClaw</string>
+    <string name="hint_mission_control">>_ Press DASHBOARD to open Mission Control</string>
+    <string name="hint_bootstrap_in_progress">>_ Bootstrap in progress…</string>
+
+    <!-- Log Console -->
+    <string name="log_console_title">┌─ LOG CONSOLE ───────────────┐</string>
+    <string name="log_empty_hint">No log output yet.</string>
+    <string name="log_prompt">>_</string>
+
+    <!-- Toasts / Snackbars -->
+    <string name="toast_picoclaw_started">PicoClaw started</string>
+    <string name="toast_picoclaw_stopped">PicoClaw stopped</string>
+    <string name="toast_picoclaw_restarting">Restarting PicoClaw…</string>
+    <string name="toast_server_unhealthy">Server health check failed</string>
+</resources>

@@ -25,17 +25,17 @@ object AppStage {
     }
 
     fun welcomeTextIsDisplayed() {
-        onView(withText("Welcome to ClawDroid"))
+        onView(withText("ClawDroid"))
             .check(matches(isDisplayed()))
     }
 
     fun settingsButtonIsDisplayed() {
-        onView(withText("Settings"))
+        onView(withText("SETTINGS"))
             .check(matches(isDisplayed()))
     }
 
     fun clickSettings() {
-        onView(withText("Settings")).perform(click())
+        onView(withText("SETTINGS")).perform(click())
     }
 
     fun configScreenIsDisplayed() {

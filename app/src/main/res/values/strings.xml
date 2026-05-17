@@ -3,26 +3,83 @@
     <string name="app_name">ClawDroid</string>
     <string name="welcome_message">Welcome to ClawDroid</string>
 
+    <!-- App Bar -->
+    <string name="app_subtitle">Your on-device AI assistant</string>
+
+    <!-- Menu -->
+    <string name="menu_help">Help</string>
+    <string name="menu_about">About</string>
+
+    <!-- Status Card -->
+    <string name="card_status_title">System Status</string>
+    <string name="label_bootstrap">Environment Setup</string>
+    <string name="label_picoclaw">PicoClaw</string>
+    <string name="label_server">Server</string>
+
+    <!-- Bootstrap Status Chips -->
+    <string name="status_bootstrap_pending">Pending</string>
+    <string name="status_bootstrap_checking">Checking…</string>
+    <string name="status_bootstrap_extracting">Extracting…</string>
+    <string name="status_bootstrap_ready">Ready</string>
+    <string name="status_bootstrap_error">Error</string>
+
+    <!-- PicoClaw Status Chips -->
+    <string name="status_picoclaw_stopped">Stopped</string>
+    <string name="status_picoclaw_running">Running</string>
+    <string name="status_picoclaw_starting">Starting…</string>
+    <string name="status_picoclaw_stopping">Stopping…</string>
+
+    <!-- Server Status Chips -->
+    <string name="status_server_offline">Offline</string>
+    <string name="status_server_online">Online</string>
+    <string name="status_server_checking">Checking…</string>
+
+    <!-- Info Card -->
+    <string name="card_info_title">What is PicoClaw?</string>
+    <string name="info_picoclaw_description">PicoClaw is a lightweight AI assistant that runs entirely on your device. It uses a tiny language model to answer questions, write code, and help with tasks without sending data to the cloud.</string>
+    <string name="btn_learn_more">Learn more</string>
+
+    <!-- Controls Card -->
+    <string name="card_controls_title">Actions</string>
+    <string name="btn_settings">Settings</string>
+    <string name="btn_retry">Retry</string>
+
+    <!-- FAB Accessibility -->
+    <string name="fab_start_desc">Start PicoClaw</string>
+    <string name="fab_stop_desc">Stop PicoClaw</string>
+
+    <!-- Icon Content Descriptions (accessibility) -->
+    <string name="icon_bootstrap_desc">Environment setup icon</string>
+    <string name="icon_picoclaw_desc">PicoClaw icon</string>
+    <string name="icon_server_desc">Server icon</string>
+    <string name="icon_error_desc">Error indicator</string>
+
+    <!-- Inline Messages -->
+    <string name="error_bootstrap_failed">Setup failed. Tap Retry to try again.</string>
+    <string name="error_picoclaw_not_ready">Wait for environment setup to complete before starting PicoClaw.</string>
+    <string name="error_mission_control_offline">Mission Control is unavailable while the server is offline. Start PicoClaw first.</string>
+    <string name="error_logs_empty">No logs available yet. Start PicoClaw to generate logs.</string>
+
+    <!-- Dialog / Onboarding -->
+    <string name="dialog_welcome_title">Welcome to ClawDroid</string>
+    <string name="dialog_welcome_message">ClawDroid runs PicoClaw — a private AI assistant that lives on your phone. No internet required after setup.</string>
+    <string name="dialog_welcome_button">Get Started</string>
+
+    <!-- Legacy strings (keep for compatibility) -->
     <string name="bootstrap_initializing">Initializing Termux environment…</string>
     <string name="bootstrap_checking">Setting up Termux environment…</string>
     <string name="bootstrap_extracting">Extracting Termux environment…</string>
     <string name="bootstrap_ready">Termux environment ready</string>
     <string name="bootstrap_error">Bootstrap error: %s</string>
-    
-    <!-- PicoClaw Status -->
     <string name="picoclaw_status_stopped">PicoClaw: Stopped</string>
     <string name="picoclaw_status_running">PicoClaw: Running</string>
     <string name="picoclaw_status_starting">PicoClaw: Starting…</string>
     <string name="picoclaw_status_stopping">PicoClaw: Stopping…</string>
-    
-    <!-- Control Buttons -->
     <string name="btn_start">Start PicoClaw</string>
     <string name="btn_stop">Stop PicoClaw</string>
     <string name="btn_restart">Restart PicoClaw</string>
     <string name="btn_mission_control">Mission Control</string>
     <string name="btn_view_logs">View Logs</string>
-    
-    <!-- Server Info -->
     <string name="server_status">Server: http://localhost:%1$d</string>
     <string name="mission_control_hint">Open in browser</string>
 </resources>

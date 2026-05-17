@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/terminal_black">
+
+    <!--
+      ============================================================
+      STATUS PANEL (top ~45%)
+      Scrollable so it adapts to small screens without crowding
+      the fixed-size log console below.
+      ============================================================
+    -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/status_scroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        android:scrollbars="none"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/log_console_container"
+        app:layout_constraintHeight_percent="0.45">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <!-- App Header with >_ prompt aesthetic -->
+            <TextView
+                android:id="@+id/terminal_header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="@string/terminal_header"
+                android:textColor="@color/terminal_cyan"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:paddingBottom="4dp" />
+
+            <!-- Double-line separator (ASCII art style) -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="═══════════════════════════════"
+                android:textColor="@color/terminal_gray"
+                android:textSize="12sp"
+                android:includeFontPadding="false" />
+
+            <!-- Status block: one line per subsystem -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="8dp"
+                android:paddingBottom="4dp">
+
+                <!-- Termux bootstrap status -->
+                <TextView
+                    android:id="@+id/terminal_status_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="@string/status_termux_ready"
+                    android:textColor="@color/terminal_green"
+                    android:textSize="14sp"
+                    android:paddingVertical="2dp"
+                    tools:text="[ OK ] Termux environment ready" />
+
+                <!-- PicoClaw process status -->
+                <TextView
+                    android:id="@+id/picoclaw_status_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="@string/picoclaw_status_stopped"
+                    android:textColor="@color/terminal_red"
+                    android:textSize="14sp"
+                    android:paddingVertical="2dp"
+                    tools:text="[ !! ] PicoClaw: Stopped" />
+
+                <!-- Server listener status -->
+                <TextView
+                    android:id="@+id/server_status_text"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="monospace"
+                    android:text="@string/server_status"
+                    android:textColor="@color/terminal_cyan"
+                    android:textSize="14sp"
+                    android:paddingVertical="2dp"
+                    tools:text="[ :: ] localhost:8080 | HEALTHY" />
+            </LinearLayout>
+
+            <!--
+                Bootstrap progress bar:
+                - Ultra-thin (4dp) so it feels like a terminal loading bar.
+                - Neon green fill, dark grey track.
+                - Visibility toggled by Kotlin code.
+            -->
+            <ProgressBar
+                android:id="@+id/bootstrap_progress_bar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="4dp"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="4dp"
+                android:progressTint="@color/terminal_green"
+                android:progressBackgroundTint="@color/terminal_gray"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <!-- Single-line separator -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="───────────────────────────────"
+                android:textColor="@color/terminal_gray"
+                android:textSize="12sp"
+                android:includeFontPadding="false" />
+
+            <!-- Contextual hint / last action -->
+            <TextView
+                android:id="@+id/hint_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:text="@string/hint_default"
+                android:textColor="@color/terminal_yellow"
+                android:textSize="12sp"
+                android:paddingTop="8dp"
+                tools:text="> Type 'help' for available commands" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!--
+      ============================================================
+      LOG CONSOLE (fixed 40% height)
+      Embedded terminal-like output. Always visible on main screen.
+      Distinct background (#0A0A0A) to separate it from pure-black
+      status panel above.
+      ============================================================
+    -->
+    <FrameLayout
+        android:id="@+id/log_console_container"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:background="@color/terminal_console_bg"
+        app:layout_constraintBottom_toTopOf="@id/command_bar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHeight_percent="0.40"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <!-- Console window chrome (top bar) -->
+        <TextView
+            android:id="@+id/log_console_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/terminal_console_header_bg"
+            android:fontFamily="monospace"
+            android:paddingHorizontal="8dp"
+            android:paddingVertical="4dp"
+            android:text="┌─ LOG CONSOLE ───────────────┐"
+            android:textColor="@color/terminal_gray"
+            android:textSize="12sp"
+            android:includeFontPadding="false" />
+
+        <!-- Scrollable log output -->
+        <ScrollView
+            android:id="@+id/log_scroll"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="20dp"
+            android:padding="8dp"
+            android:scrollbars="vertical">
+
+            <TextView
+                android:id="@+id/log_text"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="monospace"
+                android:textColor="@color/terminal_green"
+                android:textSize="11sp"
+                android:lineSpacingMultiplier="1.15"
+                tools:text="> PicoClaw binary extracted&#10;> Starting server on :8080&#10;> Health check passed" />
+        </ScrollView>
+
+        <!--
+            Blinking-cursor feel:
+            A static ">_" prompt anchored to the bottom of the console.
+            In the live implementation this can be animated (alpha pulse)
+            via Kotlin ObjectAnimator.
+        -->
+        <TextView
+            android:id="@+id/console_prompt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:background="@color/terminal_console_bg"
+            android:fontFamily="monospace"
+            android:padding="8dp"
+            android:text=">_"
+            android:textColor="@color/terminal_cyan"
+            android:textSize="12sp"
+            android:textStyle="bold" />
+    </FrameLayout>
+
+    <!--
+      ============================================================
+      COMMAND BAR (bottom)
+      Compact icon+text buttons in a horizontally-scrollable row.
+      Fixes the old "Restart text renders vertically" bug by:
+        - Using short single-word labels (START, STOP, etc.)
+        - Enforcing maxLines="1"
+        - Giving each button adequate minWidth (72dp)
+      ============================================================
+    -->
+    <HorizontalScrollView
+        android:id="@+id/command_bar"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/terminal_bar_bg"
+        android:scrollbars="none"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="4dp"
+            android:gravity="center_vertical">
+
+            <!-- START -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_start"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:minWidth="72dp"
+                android:maxLines="1"
+                android:text="@string/cmd_start"
+                android:textAllCaps="true"
+                android:textColor="@color/terminal_green"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:icon="@drawable/ic_play_arrow"
+                app:iconGravity="top"
+                app:iconPadding="2dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/terminal_green"
+                app:rippleColor="@color/terminal_green"
+                tools:ignore="TextContrastCheck" />
+
+            <!-- STOP -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_stop"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:minWidth="72dp"
+                android:maxLines="1"
+                android:text="@string/cmd_stop"
+                android:textAllCaps="true"
+                android:textColor="@color/terminal_red"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:icon="@drawable/ic_stop"
+                app:iconGravity="top"
+                app:iconPadding="2dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/terminal_red"
+                app:rippleColor="@color/terminal_red"
+                tools:ignore="TextContrastCheck" />
+
+            <!-- RESTART -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_restart"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:minWidth="72dp"
+                android:maxLines="1"
+                android:text="@string/cmd_restart"
+                android:textAllCaps="true"
+                android:textColor="@color/terminal_yellow"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:icon="@drawable/ic_refresh"
+                app:iconGravity="top"
+                app:iconPadding="2dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/terminal_yellow"
+                app:rippleColor="@color/terminal_yellow"
+                tools:ignore="TextContrastCheck" />
+
+            <!-- DASHBOARD (Mission Control) -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_mission_control"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:minWidth="72dp"
+                android:maxLines="1"
+                android:text="@string/cmd_dashboard"
+                android:textAllCaps="true"
+                android:textColor="@color/terminal_cyan"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:icon="@drawable/ic_web"
+                app:iconGravity="top"
+                app:iconPadding="2dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/terminal_cyan"
+                app:rippleColor="@color/terminal_cyan"
+                tools:ignore="TextContrastCheck" />
+
+            <!-- LOGS -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_view_logs"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:minWidth="72dp"
+                android:maxLines="1"
+                android:text="@string/cmd_logs"
+                android:textAllCaps="true"
+                android:textColor="@color/terminal_white"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:icon="@drawable/ic_list"
+                app:iconGravity="top"
+                app:iconPadding="2dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/terminal_white"
+                app:rippleColor="@color/terminal_white"
+                tools:ignore="TextContrastCheck" />
+
+            <!-- SETTINGS -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_settings"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="56dp"
+                android:minWidth="72dp"
+                android:maxLines="1"
+                android:text="@string/cmd_settings"
+                android:textAllCaps="true"
+                android:textColor="@color/terminal_gray"
+                android:textSize="11sp"
+                android:textStyle="bold"
+                app:icon="@drawable/ic_settings"
+                app:iconGravity="top"
+                app:iconPadding="2dp"
+                app:iconSize="20dp"
+                app:iconTint="@color/terminal_gray"
+                app:rippleColor="@color/terminal_gray"
+                tools:ignore="TextContrastCheck" />
+        </LinearLayout>
+    </HorizontalScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
