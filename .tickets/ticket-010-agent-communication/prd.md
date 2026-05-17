@@ -76,7 +76,7 @@ A single-screen "Chat-First Terminal" architecture where chat is the hero (70%) 
 ### Task 6: Update Tests
 - **Subtasks**:
 - [x] Subtask 6.1: Existing acceptance tests unchanged (new features don't break existing matchers)
-- [s] Subtask 6.2: Run full quality check (lint + test + assembleDebug all pass) <!-- E2E monkey test pending below -->
+- [x] Subtask 6.2: Run full quality check (lint + test + assembleDebug all pass) <!-- E2E monkey test: 100 events, 0 crashes -->
 
 ---
 
