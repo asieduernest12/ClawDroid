@@ -2,6 +2,7 @@ package com.example.clawdroid
 
 import android.graphics.Color
 import android.graphics.Typeface
+import android.os.Build
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
@@ -47,10 +48,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
-import java.io.BufferedReader
-import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.concurrent.TimeUnit
 
 class AgentChatActivity : AppCompatActivity() {
 
@@ -254,8 +254,11 @@ class AgentChatActivity : AppCompatActivity() {
     private fun setupProviderDropdown() {
         val providers = configManager.loadProviders()
         if (providers.isEmpty()) {
-            Toast.makeText(this, R.string.providers_empty_title, Toast.LENGTH_SHORT).show()
-            finish()
+            dropdownProvider.setText(getString(R.string.providers_empty_title), false)
+            dropdownProvider.isEnabled = false
+            inputMessage.hint = getString(R.string.agent_hint_no_provider)
+            btnSend.isEnabled = false
+            addSystemMessage(getString(R.string.agent_no_provider_guide))
             return
         }
 
@@ -586,6 +589,12 @@ class AgentChatActivity : AppCompatActivity() {
             return
         }
 
+        if (provider.apiKey.isBlank()) {
+            Toast.makeText(this, "API key not set for ${provider.modelName}", Toast.LENGTH_LONG).show()
+            addSystemMessage("Error: API key not configured for '${provider.modelName}'. Edit the provider to add an API key.")
+            return
+        }
+
         val sessionId = currentSessionId ?: run {
             createNewSession()
             currentSessionId!!
@@ -760,9 +769,7 @@ class AgentChatActivity : AppCompatActivity() {
         val app = application as App
         val binaryPath = app.getPicoClawBinaryPath()
         if (binaryPath == null) {
-            terminalLines.add("Error: PicoClaw binary not found")
-            terminalAdapter.notifyItemInserted(terminalLines.size - 1)
-            recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
+            appendTerminalLine("Error: PicoClaw binary not found")
             return
         }
 
@@ -772,58 +779,60 @@ class AgentChatActivity : AppCompatActivity() {
         lifecycleScope.launch(Dispatchers.IO) {
             try {
                 isExecutingCliCommand = true
-                val pb = ProcessBuilder(listOf(binaryPath) + args)
+
+                val pb = buildCliProcess(binaryPath, args)
                 pb.directory(java.io.File(workDir))
                 pb.environment().putAll(app.bootstrapManager.getEnv())
                 pb.environment()["PICOCLAW_HOME"] = workDir
                 pb.redirectErrorStream(true)
 
                 val process = pb.start()
-                val reader = BufferedReader(InputStreamReader(process.inputStream))
-                var line: String?
-                val outputLines = mutableListOf<String>()
-                
-                val startTime = System.currentTimeMillis()
-                val timeout = 10000L
-                
-                while (true) {
-                    if (System.currentTimeMillis() - startTime > timeout) {
-                        process.destroy()
-                        withContext(Dispatchers.Main) {
-                            terminalLines.add("Error: Command timed out after 10s")
-                            terminalAdapter.notifyItemInserted(terminalLines.size - 1)
-                            recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
-                        }
+                val exited = process.waitFor(10, TimeUnit.SECONDS)
+
+                if (!exited) {
+                    process.destroy()
+                    process.waitFor(1, TimeUnit.SECONDS)
+                    withContext(Dispatchers.Main) {
+                        appendTerminalLine("Error: Command timed out after 10s")
                         isExecutingCliCommand = false
-                        return@launch
                     }
-                    
-                    line = reader.readLine()
-                    if (line == null) break
-                    outputLines.add(line)
+                    return@launch
                 }
-                
-                val exitCode = process.waitFor()
+
+                val output = process.inputStream.bufferedReader().readText()
+                val exitCode = process.exitValue()
 
                 withContext(Dispatchers.Main) {
-                    if (outputLines.isEmpty()) {
-                        terminalLines.add("(exit code: $exitCode)")
+                    if (output.isBlank()) {
+                        appendTerminalLine("(exit code: $exitCode)")
                     } else {
-                        terminalLines.addAll(outputLines)
+                        output.trimEnd().lines().forEach { appendTerminalLine(it) }
                     }
-                    terminalAdapter.notifyItemRangeInserted(terminalLines.size - outputLines.size - 1, outputLines.size + 1)
-                    recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
                     isExecutingCliCommand = false
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
-                    terminalLines.add("Error: ${e.message}")
-                    terminalAdapter.notifyItemInserted(terminalLines.size - 1)
-                    recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
+                    appendTerminalLine("Error: ${e.message}")
                     isExecutingCliCommand = false
                 }
             }
         }
+    }
+
+    private fun buildCliProcess(binaryPath: String, args: List<String>): ProcessBuilder {
+        return if (Build.VERSION.SDK_INT >= 29 && binaryPath.startsWith("/data/data/")) {
+            val is64Bit = Build.SUPPORTED_64_BIT_ABIS.isNotEmpty()
+            val linker = if (is64Bit) "/system/bin/linker64" else "/system/bin/linker"
+            ProcessBuilder(listOf(linker, binaryPath) + args)
+        } else {
+            ProcessBuilder(listOf(binaryPath) + args)
+        }
+    }
+
+    private fun appendTerminalLine(text: String) {
+        terminalLines.add(text)
+        terminalAdapter.notifyItemInserted(terminalLines.size - 1)
+        recyclerTerminal.smoothScrollToPosition(terminalLines.size - 1)
     }
 
     private fun addSystemMessage(text: String) {

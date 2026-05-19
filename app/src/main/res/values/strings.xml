@@ -127,6 +127,8 @@
     <string name="agent_welcome">Hello! I\'m PicoClaw, your on-device AI assistant. How can I help you today?</string>
     <string name="agent_error_send">Failed to send message</string>
     <string name="agent_btn_chat">Chat with Agent</string>
+    <string name="agent_no_provider_guide">No providers configured. Go to Providers from the main menu to add an API provider, then return here to start chatting.</string>
+    <string name="agent_hint_no_provider">Add a provider first</string>
 
     <!-- Terminal -->
     <string name="terminal_title">PicoClaw Terminal</string>
