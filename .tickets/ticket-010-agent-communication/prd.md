@@ -101,14 +101,14 @@ A single-screen "Chat-First Terminal" architecture where chat is the hero (70%) 
 ---
 
 ## Acceptance Criteria
-1. [ ] Toolbar shows active provider + model dropdowns
-2. [ ] Model dropdown fetches and displays models from active provider's API
-3. [ ] User can type a message and send to agent
-4. [ ] Agent response appears with markdown rendered (bold, code blocks, lists)
-5. [ ] Typing indicator shows while agent processes
-6. [ ] Terminal bottom sheet shows live PicoClaw gateway output
-7. [ ] Raw command input sends to PicoClaw stdin
-8. [ ] Command chips send predefined commands (status, version, etc.)
-9. [ ] Chevron toggle expands/collapses terminal
-10. [ ] FAB on main screen opens agent chat when PicoClaw is running
-11. [ ] All existing tests still pass
+1. [x] Toolbar shows active provider + model dropdowns
+2. [x] Model dropdown fetches and displays models from active provider's API
+3. [x] User can type a message and send to agent
+4. [x] Agent response appears with markdown rendered (bold, code blocks, lists)
+5. [x] Typing indicator shows while agent processes
+6. [x] Terminal bottom sheet shows live PicoClaw gateway output
+7. [x] Raw command input sends to PicoClaw stdin
+8. [x] Command chips send predefined commands (status, version, etc.)
+9. [x] Chevron toggle expands/collapses terminal
+10. [x] FAB on main screen opens agent chat when PicoClaw is running
+11. [x] All existing tests still pass

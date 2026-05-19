@@ -18,14 +18,14 @@ The current `AgentChatActivity` has critical limitations:
 
 ## Acceptance Criteria
 
-- [ ] Sending a message includes all prior messages in the same session in the `messages` array.
-- [ ] Sessions survive process death (stored locally via SharedPreferences / JSON or Room).
-- [ ] Session list UI allows creating a new session, switching sessions, renaming, and deleting.
-- [ ] Thinking content is parsed from the API response and shown in a collapsible card labeled "Thinking...".
-- [ ] Tool calls are parsed from the API response and shown in a collapsible card with call name, JSON arguments, and result.
-- [ ] GitHub Actions workflow file exists in `.github/workflows/deploy.yml` and matches the ptimeout pattern (version bump + build + release).
-- [ ] `make build-debug` passes inside the Docker container.
-- [ ] Unit tests pass (`make test-unit`).
+- [x] Sending a message includes all prior messages in the same session in the `messages` array.
+- [x] Sessions survive process death (stored locally via SharedPreferences / JSON or Room).
+- [x] Session list UI allows creating a new session, switching sessions, renaming, and deleting.
+- [x] Thinking content is parsed from the API response and shown in a collapsible card labeled "Thinking...".
+- [x] Tool calls are parsed from the API response and shown in a collapsible card with call name, JSON arguments, and result.
+- [x] GitHub Actions workflow file exists in `.github/workflows/deploy.yml` and matches the ptimeout pattern (version bump + build + release).
+- [x] `make build-debug` passes inside the Docker container.
+- [x] Unit tests pass (`make test-unit`).
 
 ## Out of Scope
 
@@ -61,6 +61,47 @@ The current `AgentChatActivity` has critical limitations:
 ### Phase 6: GitHub Actions Workflow
 1. Create `.github/workflows/deploy.yml` following the ptimeout release pattern.
 2. On push to `main`: bump version in `version.txt` or `build.gradle`, run `make build-release`, attach APK to GitHub release.
+
+## Tasks
+
+- [x] Task 1: Data Models & Session Persistence
+  - **Subtasks**:
+    - [x] Subtask 1.1: Add ChatSession data model (id, title, createdAt, updatedAt, providerId, modelId)
+    - [x] Subtask 1.2: Extend ChatMessage with sessionId, thinkingContent, toolCallsJson
+    - [x] Subtask 1.3: Create ChatHistoryManager (SharedPreferences/JSON store) with CRUD + unit tests
+
+- [x] Task 2: Full History in API Calls
+  - **Subtasks**:
+    - [x] Subtask 2.1: Update AgentChatActivity.sendChatMessage() to include full session history
+    - [x] Subtask 2.2: Add message truncation/token counting for long conversations
+
+- [x] Task 3: Session Management UI
+  - **Subtasks**:
+    - [x] Subtask 3.1: Create dialog_sessions.xml layout for session list
+    - [x] Subtask 3.2: Add new/switch/rename/delete session logic
+    - [x] Subtask 3.3: Auto-generate session titles from first user message
+
+- [x] Task 4: Thinking Stream UI
+  - **Subtasks**:
+    - [x] Subtask 4.1: Create item_chat_thinking.xml layout (collapsible card, monospace)
+    - [x] Subtask 4.2: Parse reasoning_content and <think> blocks from API response
+    - [x] Subtask 4.3: Store thinking in ChatMessage and render via ChatAdapter
+
+- [x] Task 5: Tool Call Visibility UI
+  - **Subtasks**:
+    - [x] Subtask 5.1: Create item_chat_toolcall.xml layout (structured card: name, args, result)
+    - [x] Subtask 5.2: Parse tool_calls from API response
+    - [x] Subtask 5.3: Store tool calls in ChatMessage and render via ChatAdapter
+
+- [x] Task 6: Deploy Workflow
+  - **Subtasks**:
+    - [x] Subtask 6.1: Create .github/workflows/deploy.yml (ptimeout pattern: version bump → build → release)
+    - [x] Subtask 6.2: Add version.txt at repo root
+
+- [x] Task 7: Unit Tests
+  - **Subtasks**:
+    - [x] Subtask 7.1: Write ChatHistoryManagerTest (284 lines, all pass)
+    - [x] Subtask 7.2: Verify make build-debug passes
 
 ## Files to Touch
 

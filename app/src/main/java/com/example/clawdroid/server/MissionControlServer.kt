@@ -3,6 +3,7 @@ package com.example.clawdroid.server
 import android.content.Context
 import android.util.Log
 import com.example.clawdroid.server.model.ServerStatus
+import com.example.clawdroid.telemetry.TelemetryService
 import fi.iki.elonen.NanoHTTPD
 import org.json.JSONObject
 import java.io.InputStream
@@ -41,6 +42,7 @@ class MissionControlServer(
             uri == "/api/status" && method == Method.GET -> handleStatus()
             uri == "/api/start" && method == Method.POST -> handleStart()
             uri == "/api/stop" && method == Method.POST -> handleStop()
+            uri == "/api/logs" && method == Method.GET -> handleLogs()
             uri.startsWith("/api/") -> newFixedLengthResponse(
                 Response.Status.NOT_FOUND, MIME_PLAINTEXT, "Not Found"
             )
@@ -85,6 +87,15 @@ class MissionControlServer(
         val json = JSONObject().apply {
             put("success", stopped)
             put("message", if (stopped) "PicoClaw stopped" else "Failed to stop PicoClaw")
+        }
+        return jsonResponse(json)
+    }
+
+    private fun handleLogs(): Response {
+        val events = TelemetryService.getEventsAsJson()
+        val json = JSONObject().apply {
+            put("total", events.length())
+            put("events", events)
         }
         return jsonResponse(json)
     }

@@ -3,6 +3,7 @@ package com.example.clawdroid
 import android.app.Application
 import android.util.Log
 import com.example.clawdroid.server.ServerManager
+import com.example.clawdroid.telemetry.TelemetryService
 import com.example.clawdroid.terminal.EmbeddedTermuxSession
 import com.example.clawdroid.terminal.ProcessMonitor
 import com.example.clawdroid.terminal.TerminalManager
@@ -44,6 +45,7 @@ class App : Application() {
         terminalManager = TerminalManager(this)
         processMonitor = ProcessMonitor(appScope)
         serverManager = ServerManager(this)
+        TelemetryService.init(this)
 
         initializeTermux()
         serverManager.start()

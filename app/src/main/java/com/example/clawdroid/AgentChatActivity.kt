@@ -3,6 +3,9 @@ package com.example.clawdroid
 import android.graphics.Color
 import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
@@ -10,6 +13,8 @@ import android.widget.ArrayAdapter
 import android.widget.AutoCompleteTextView
 import android.widget.EditText
 import android.widget.LinearLayout
+import android.widget.ListView
+import android.widget.PopupWindow
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -19,12 +24,17 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.clawdroid.chat.ChatAdapter
 import com.example.clawdroid.chat.ChatHistoryManager
+import com.example.clawdroid.command.CommandContext
+import com.example.clawdroid.command.CommandExecutor
+import com.example.clawdroid.command.CommandParseResult
+import com.example.clawdroid.command.CommandRegistry
 import com.example.clawdroid.config.ProviderConfigManager
 import com.example.clawdroid.model.ChatMessage
 import com.example.clawdroid.model.ChatSession
 import com.example.clawdroid.model.MessageRole
 import com.example.clawdroid.model.ModelProvider
 import com.example.clawdroid.model.PickerModel
+import com.example.clawdroid.state.AppStateManager
 import com.example.clawdroid.terminal.TermuxBootstrapState
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -73,6 +83,11 @@ class AgentChatActivity : AppCompatActivity() {
     private val fetchedModels = mutableListOf<String>()
     private var isExecutingCliCommand = false
     private var currentSessionId: String? = null
+
+    private val commandRegistry: CommandRegistry = CommandRegistry.defaultCommands()
+    private lateinit var commandExecutor: CommandExecutor
+    private var commandPopup: PopupWindow? = null
+    private var commandPopupList: ListView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -131,6 +146,18 @@ class AgentChatActivity : AppCompatActivity() {
         setupCommandChips()
         setupSendActions()
         loadProviderTerminalOutput()
+
+        commandExecutor = CommandExecutor(
+            registry = commandRegistry,
+            context = CommandContext(
+                activity = this,
+                chatHistoryManager = chatHistoryManager,
+                configManager = configManager,
+                chatAdapter = chatAdapter
+            )
+        )
+        commandExecutor.setupDefaultHandlers()
+        setupSlashCommandDetection()
 
         initSession()
     }
@@ -426,9 +453,133 @@ class AgentChatActivity : AppCompatActivity() {
         }
     }
 
+    private fun setupSlashCommandDetection() {
+        inputMessage.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                val text = s?.toString() ?: ""
+                if (text.startsWith("/") && text.length > 1) {
+                    showCommandPopup(text)
+                } else {
+                    dismissCommandPopup()
+                }
+            }
+        })
+    }
+
+    private fun showCommandPopup(query: String) {
+        val suggestions = commandRegistry.search(query)
+        if (suggestions.isEmpty()) {
+            dismissCommandPopup()
+            return
+        }
+
+        if (commandPopup == null) {
+            val view = LayoutInflater.from(this).inflate(R.layout.popup_slash_commands, null)
+            commandPopupList = view.findViewById(R.id.list_commands)
+            commandPopupList?.setOnItemClickListener { _, _, position, _ ->
+                val cmd = suggestions[position]
+                val cmdText = if (cmd.hasArgs) "/${cmd.name} " else "/${cmd.name}"
+                inputMessage.setText(cmdText)
+                inputMessage.setSelection(cmdText.length)
+                dismissCommandPopup()
+            }
+            commandPopup = PopupWindow(
+                view,
+                resources.getDimensionPixelSize(R.dimen.popup_width),
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                true
+            ).apply {
+                isOutsideTouchable = true
+                elevation = 8f
+            }
+        }
+
+        val names = suggestions.map { cmd ->
+            if (cmd.hasArgs) "${cmd.usage} ${cmd.argHint}" else cmd.usage
+        }
+        commandPopupList?.adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_list_item_1,
+            names
+        )
+        commandPopupList?.let { list ->
+            val listHeight = minOf(
+                suggestions.size * resources.getDimensionPixelSize(R.dimen.popup_item_height),
+                resources.getDimensionPixelSize(R.dimen.popup_max_height)
+            )
+            val popupHeight = listHeight +
+                (commandPopup?.contentView?.paddingTop ?: 0) +
+                (commandPopup?.contentView?.paddingBottom ?: 0)
+            commandPopup?.height = popupHeight
+        }
+        commandPopup?.showAsDropDown(inputMessage, 0, 0)
+    }
+
+    private fun dismissCommandPopup() {
+        commandPopup?.dismiss()
+    }
+
+    private fun truncateMessages(messages: List<ChatMessage>, maxTokens: Int = 128000): List<ChatMessage> {
+        if (messages.isEmpty()) return messages
+        fun estimateTokens(text: String): Int = (text.length / 4).coerceAtLeast(1)
+        val systemPrompt = "You are a helpful AI assistant running inside ClawDroid on Android."
+        var runningTokens = estimateTokens(systemPrompt)
+        val result = mutableListOf<ChatMessage>()
+        for (msg in messages.reversed()) {
+            val tokens = estimateTokens(msg.content)
+            if (runningTokens + tokens > maxTokens && result.isNotEmpty()) break
+            result.add(0, msg)
+            runningTokens += tokens
+        }
+        return result
+    }
+
     private fun sendChatMessage() {
         val text = inputMessage.text.toString().trim()
         if (text.isBlank()) return
+
+        // Intercept slash commands
+        if (text.startsWith("/")) {
+            val result = commandExecutor.execute(text)
+            inputMessage.text?.clear()
+            if (result is CommandParseResult.Success) {
+                when (result.command.name) {
+                    "clear" -> clearCurrentSession()
+                    "help" -> { /* handled by executor */ }
+                    "model" -> if (result.args.isNotEmpty()) {
+                        activeModel = result.args[0]
+                        selectedModel.text = result.args[0]
+                        result.args.forEach { arg ->
+                            AppStateManager.updateChat({ it.copy(currentModel = arg) }, source = "slash:model")
+                        }
+                    }
+                    "provider" -> if (result.args.isNotEmpty()) {
+                        val providers = configManager.loadProviders()
+                        val match = providers.find {
+                            it.modelName.equals(result.args[0], ignoreCase = true)
+                        }
+                        if (match != null) {
+                            activeProvider = match
+                            dropdownProvider.setText(match.modelName, false)
+                            activeModel = ""
+                            selectedModel.text = ""
+                            fetchedModels.clear()
+                            fetchModelsFromProvider()
+                        } else {
+                            addSystemMessage("Provider '${result.args[0]}' not found")
+                        }
+                    }
+                    "session" -> if (result.args.firstOrNull() == "new") {
+                        createNewSession()
+                        addSystemMessage(getString(R.string.agent_welcome))
+                    }
+                    "export" -> { /* handled by executor */ }
+                }
+            }
+            return
+        }
 
         val provider = activeProvider ?: run {
             Toast.makeText(this, "No provider selected", Toast.LENGTH_SHORT).show()
@@ -466,8 +617,8 @@ class AgentChatActivity : AppCompatActivity() {
                 conn.connectTimeout = 30000
                 conn.readTimeout = 60000
 
-                // Build full conversation history
-                val historyMessages = chatHistoryManager.getMessages(sessionId)
+                // Build full conversation history with truncation
+                val historyMessages = truncateMessages(chatHistoryManager.getMessages(sessionId))
                 val messagesJson = JSONArray().apply {
                     // Add system prompt if first message
                     if (historyMessages.none { it.role == MessageRole.USER }) {
@@ -486,22 +637,18 @@ class AgentChatActivity : AppCompatActivity() {
                                 put("role", "assistant")
                                 put("content", msg.content)
                             })
-                            MessageRole.TOOL_CALL -> put(JSONObject().apply {
-                                put("role", "tool")
-                                put("tool_call_id", msg.id)
-                                put("content", msg.toolResult ?: "")
-                            })
+                            MessageRole.TOOL_CALL -> {
+                                val tcId = msg.toolName ?: msg.id
+                                put(JSONObject().apply {
+                                    put("role", "tool")
+                                    put("tool_call_id", tcId)
+                                    put("content", msg.toolResult ?: "")
+                                })
+                            }
                             else -> { /* skip system/thinking display messages */ }
                         }
                     }
                 }
-
-                val body = JSONObject().apply {
-                    put("model", model)
-                    put("messages", messagesJson)
-                }
-
-                conn.outputStream.use { it.write(body.toString().toByteArray()) }
                 val responseCode = conn.responseCode
                 val response = if (responseCode in 200..299) {
                     conn.inputStream.bufferedReader().readText()
