@@ -55,13 +55,17 @@ class ProviderConfigManager(private val context: Context) {
         }
     }
 
-    fun ensureConfigExists() {
+    fun ensureConfigExists(defaultProviders: List<ModelProvider> = emptyList()) {
         if (!configFile.exists()) {
-            Log.d(TAG, "Creating default config.json")
+            Log.d(TAG, "Creating default config.json with ${defaultProviders.size} providers")
             configFile.parentFile?.mkdirs()
-            saveConfigJson(JSONObject().apply {
-                put("model_list", JSONArray())
-            })
+            if (defaultProviders.isNotEmpty()) {
+                saveProviders(defaultProviders)
+            } else {
+                saveConfigJson(JSONObject().apply {
+                    put("model_list", JSONArray())
+                })
+            }
         }
     }
 

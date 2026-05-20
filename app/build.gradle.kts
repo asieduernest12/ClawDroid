@@ -1,5 +1,7 @@
 import java.net.URL
 import java.io.InputStream
+import java.io.FileInputStream
+import java.util.Properties
 
 plugins {
     id("com.android.application")
@@ -55,9 +57,24 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    val envFile = rootProject.file(".env")
+    val openRouterKey = if (envFile.exists()) {
+        try {
+            val props = Properties()
+            FileInputStream(envFile).use { props.load(it) }
+            props.getProperty("OPENROUTER_API_KEY", "")
+        } catch (e: Exception) {
+            ""
+        }
+    } else ""
+
     buildTypes {
+        debug {
+            buildConfigField("String", "OPENROUTER_API_KEY", "\"${openRouterKey}\"")
+        }
         release {
             isMinifyEnabled = false
+            buildConfigField("String", "OPENROUTER_API_KEY", "\"\"")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -76,6 +93,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 
 }

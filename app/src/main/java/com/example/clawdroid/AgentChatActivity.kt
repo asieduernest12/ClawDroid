@@ -54,6 +54,16 @@ import java.util.concurrent.TimeUnit
 
 class AgentChatActivity : AppCompatActivity() {
 
+    private data class ProviderGroup(
+        val slug: String,
+        val displayName: String,
+        val apiKey: String,
+        val apiBase: String,
+        val models: List<ModelProvider>,
+    ) {
+        val defaultModel: ModelProvider? get() = models.firstOrNull()
+    }
+
     private lateinit var toolbar: MaterialToolbar
     private lateinit var dropdownProvider: AutoCompleteTextView
     private lateinit var selectedModel: TextView
@@ -78,7 +88,8 @@ class AgentChatActivity : AppCompatActivity() {
     private val terminalLines = mutableListOf<String>()
     private val configManager by lazy { ProviderConfigManager(this) }
     private val chatHistoryManager by lazy { ChatHistoryManager(this) }
-    private var activeProvider: ModelProvider? = null
+    private var providerGroups: List<ProviderGroup> = emptyList()
+    private var activeGroup: ProviderGroup? = null
     private var activeModel: String = ""
     private val fetchedModels = mutableListOf<String>()
     private var isExecutingCliCommand = false
@@ -170,11 +181,11 @@ class AgentChatActivity : AppCompatActivity() {
 
         if (session != null) {
             currentSessionId = session.id
-            activeProvider = configManager.loadProviders()
-                .find { it.modelName == session.providerId }
+            val group = providerGroups.find { it.slug == session.providerId }
+            activeGroup = group
             activeModel = session.modelId
-            if (activeProvider != null) {
-                dropdownProvider.setText(activeProvider?.modelName, false)
+            if (group != null) {
+                dropdownProvider.setText(group.displayName, false)
             }
             if (activeModel.isNotBlank()) {
                 selectedModel.text = activeModel.substringAfterLast("/")
@@ -191,9 +202,9 @@ class AgentChatActivity : AppCompatActivity() {
     }
 
     private fun createNewSession() {
-        val provider = activeProvider
+        val group = activeGroup
         val session = chatHistoryManager.createSession(
-            providerId = provider?.modelName ?: "",
+            providerId = group?.slug ?: "",
             modelId = activeModel
         )
         currentSessionId = session.id
@@ -236,11 +247,11 @@ class AgentChatActivity : AppCompatActivity() {
     private fun switchToSession(session: ChatSession) {
         currentSessionId = session.id
         chatHistoryManager.setCurrentSessionId(session.id)
-        activeProvider = configManager.loadProviders()
-            .find { it.modelName == session.providerId }
+        val group = providerGroups.find { it.slug == session.providerId }
+        activeGroup = group
         activeModel = session.modelId
-        if (activeProvider != null) {
-            dropdownProvider.setText(activeProvider?.modelName, false)
+        if (group != null) {
+            dropdownProvider.setText(group.displayName, false)
         }
         if (activeModel.isNotBlank()) {
             selectedModel.text = activeModel.substringAfterLast("/")
@@ -253,7 +264,9 @@ class AgentChatActivity : AppCompatActivity() {
 
     private fun setupProviderDropdown() {
         val providers = configManager.loadProviders()
-        if (providers.isEmpty()) {
+        providerGroups = groupProviders(providers)
+
+        if (providerGroups.isEmpty()) {
             dropdownProvider.setText(getString(R.string.providers_empty_title), false)
             dropdownProvider.isEnabled = false
             inputMessage.hint = getString(R.string.agent_hint_no_provider)
@@ -262,41 +275,64 @@ class AgentChatActivity : AppCompatActivity() {
             return
         }
 
-        val providerNames = providers.map { it.modelName }.toTypedArray()
+        val groupNames = providerGroups.map { it.displayName }.toTypedArray()
         dropdownProvider.setAdapter(ArrayAdapter(this,
-            android.R.layout.simple_dropdown_item_1line, providerNames))
+            android.R.layout.simple_dropdown_item_1line, groupNames))
 
         dropdownProvider.setOnItemClickListener { _, _, position, _ ->
-            activeProvider = providers[position]
-            activeModel = ""
-            selectedModel.text = ""
+            val group = providerGroups[position]
+            activeGroup = group
+            activeModel = group.defaultModel?.model ?: ""
+            selectedModel.text = activeModel.substringAfterLast("/")
             fetchedModels.clear()
             selectedModel.hint = getString(R.string.agent_model_hint)
-            addSystemMessage("Switched provider to ${activeProvider?.modelName}")
+            addSystemMessage("Switched provider to ${group.displayName}")
             currentSessionId?.let { sid ->
                 chatHistoryManager.getSession(sid)?.let { session ->
-                    val updated = session.copy(providerId = activeProvider?.modelName ?: "")
+                    val updated = session.copy(providerId = group.slug)
                     chatHistoryManager.updateSession(updated)
                 }
             }
             fetchModelsFromProvider()
         }
 
-        if (providers.isNotEmpty()) {
-            activeProvider = providers[0]
-            dropdownProvider.setText(activeProvider?.modelName, false)
+        activeGroup = providerGroups.firstOrNull()
+        activeGroup?.let { group ->
+            dropdownProvider.setText(group.displayName, false)
+            activeModel = group.defaultModel?.model ?: ""
+            if (activeModel.isNotBlank()) {
+                selectedModel.text = activeModel.substringAfterLast("/")
+            }
         }
 
-        if (activeProvider?.apiBase?.isNotBlank() == true) {
+        if (activeGroup?.apiBase?.isNotBlank() == true) {
             fetchModelsFromProvider()
         }
+    }
+
+    private fun groupProviders(providers: List<ModelProvider>): List<ProviderGroup> {
+        val grouped = mutableMapOf<String, MutableList<ModelProvider>>()
+        for (p in providers) {
+            val key = p.provider.takeIf { it.isNotBlank() } ?: p.modelName
+            grouped.getOrPut(key) { mutableListOf() }.add(p)
+        }
+        return grouped.map { (slug, models) ->
+            val first = models.first()
+            ProviderGroup(
+                slug = slug,
+                displayName = slug.replaceFirstChar { it.uppercase() },
+                apiKey = first.apiKey,
+                apiBase = first.apiBase,
+                models = models
+            )
+        }.sortedBy { it.displayName }
     }
 
     private fun setupModelPickerTrigger() {
         layoutModelTrigger.setOnClickListener {
             val models = buildPickerModels()
             val sheet = ModelPickerBottomSheet(
-                providerName = activeProvider?.modelName ?: "Unknown",
+                providerName = activeGroup?.displayName ?: "Unknown",
                 models = models,
                 onModelSelected = { modelId ->
                     activeModel = modelId
@@ -315,21 +351,22 @@ class AgentChatActivity : AppCompatActivity() {
     }
 
     private fun buildPickerModels(): List<PickerModel> {
-        val provider = activeProvider ?: return emptyList()
-        val providerSlug = provider.modelName.lowercase()
-        val models = if (fetchedModels.isNotEmpty()) {
+        val group = activeGroup ?: return emptyList()
+        val modelIds: List<String> = if (fetchedModels.isNotEmpty()) {
             fetchedModels
         } else {
-            val fallback = provider.model.substringAfter("/")
-            if (fallback.isNotBlank()) listOf(fallback) else emptyList()
+            group.models.map { it.modelName }.ifEmpty {
+                val fallback = group.defaultModel?.model?.substringAfter("/")
+                if (!fallback.isNullOrBlank()) listOf(fallback) else emptyList()
+            }
         }
-        return models.map { id ->
+        return modelIds.map { id ->
             val ctxLen = extractContextLength(id)
             PickerModel(
                 modelId = id,
                 displayName = id,
-                providerName = provider.modelName,
-                providerSlug = providerSlug,
+                providerName = group.displayName,
+                providerSlug = group.slug,
                 contextLength = ctxLen,
                 contextDisplay = if (ctxLen != null) formatContextLength(ctxLen) else ""
             )
@@ -347,20 +384,20 @@ class AgentChatActivity : AppCompatActivity() {
     }
 
     private fun fetchModelsFromProvider() {
-        val provider = activeProvider ?: return
-        if (provider.apiBase.isBlank()) {
+        val group = activeGroup ?: return
+        if (group.apiBase.isBlank()) {
             Toast.makeText(this, "No API endpoint configured for this provider", Toast.LENGTH_SHORT).show()
             return
         }
 
         cardTyping.isVisible = true
-        addSystemMessage("Fetching models from ${provider.modelName}...")
+        addSystemMessage("Fetching models from ${group.displayName}...")
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val url = URL("${provider.apiBase}/models")
+                val url = URL("${group.apiBase}/models")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "GET"
-                conn.setRequestProperty("Authorization", "Bearer ${provider.apiKey}")
+                conn.setRequestProperty("Authorization", "Bearer ${group.apiKey}")
                 conn.connectTimeout = 15000
                 conn.readTimeout = 15000
 
@@ -372,7 +409,7 @@ class AgentChatActivity : AppCompatActivity() {
                     conn.disconnect()
                     withContext(Dispatchers.Main) {
                         cardTyping.isVisible = false
-                        addSystemMessage("Model fetch failed: HTTP $responseCode — using ${provider.modelName} default")
+                        addSystemMessage("Model fetch failed: HTTP $responseCode — using ${group.displayName} default")
                     }
                     return@launch
                 }
@@ -390,16 +427,16 @@ class AgentChatActivity : AppCompatActivity() {
                     fetchedModels.clear()
                     if (models.isNotEmpty()) {
                         fetchedModels.addAll(models)
-                        addSystemMessage("Loaded ${models.size} models from ${provider.modelName}. Tap model picker to browse.")
+                        addSystemMessage("Loaded ${models.size} models from ${group.displayName}. Tap model picker to browse.")
                     } else {
-                        addSystemMessage("No models returned from ${provider.modelName}")
+                        addSystemMessage("No models returned from ${group.displayName}")
                     }
                     cardTyping.isVisible = false
                 }
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     cardTyping.isVisible = false
-                    addSystemMessage("Could not fetch models: ${e.message} — using ${provider.modelName} default")
+                    addSystemMessage("Could not fetch models: ${e.message} — using ${group.displayName} default")
                 }
             }
         }
@@ -559,15 +596,15 @@ class AgentChatActivity : AppCompatActivity() {
                         }
                     }
                     "provider" -> if (result.args.isNotEmpty()) {
-                        val providers = configManager.loadProviders()
-                        val match = providers.find {
-                            it.modelName.equals(result.args[0], ignoreCase = true)
+                        val match = providerGroups.find {
+                            it.slug.equals(result.args[0], ignoreCase = true) ||
+                            it.displayName.equals(result.args[0], ignoreCase = true)
                         }
                         if (match != null) {
-                            activeProvider = match
-                            dropdownProvider.setText(match.modelName, false)
-                            activeModel = ""
-                            selectedModel.text = ""
+                            activeGroup = match
+                            dropdownProvider.setText(match.displayName, false)
+                            activeModel = match.defaultModel?.model ?: ""
+                            selectedModel.text = activeModel.substringAfterLast("/")
                             fetchedModels.clear()
                             fetchModelsFromProvider()
                         } else {
@@ -584,14 +621,14 @@ class AgentChatActivity : AppCompatActivity() {
             return
         }
 
-        val provider = activeProvider ?: run {
+        val group = activeGroup ?: run {
             Toast.makeText(this, "No provider selected", Toast.LENGTH_SHORT).show()
             return
         }
 
-        if (provider.apiKey.isBlank()) {
-            Toast.makeText(this, "API key not set for ${provider.modelName}", Toast.LENGTH_LONG).show()
-            addSystemMessage("Error: API key not configured for '${provider.modelName}'. Edit the provider to add an API key.")
+        if (group.apiKey.isBlank()) {
+            Toast.makeText(this, "API key not set for ${group.displayName}", Toast.LENGTH_LONG).show()
+            addSystemMessage("Error: API key not configured for '${group.displayName}'. Edit the provider to add an API key.")
             return
         }
 
@@ -610,14 +647,14 @@ class AgentChatActivity : AppCompatActivity() {
 
         lifecycleScope.launch(Dispatchers.IO) {
             try {
-                val rawModel = if (activeModel.isNotBlank()) activeModel else provider.model
-                val model = resolveModelName(rawModel, provider.apiBase)
-                val baseUrl = provider.apiBase.ifBlank { "https://api.openai.com/v1" }
+                val rawModel = if (activeModel.isNotBlank()) activeModel else group.defaultModel?.model ?: ""
+                val model = resolveModelName(rawModel, group.apiBase)
+                val baseUrl = group.apiBase.ifBlank { "https://api.openai.com/v1" }
                 val url = URL("$baseUrl/chat/completions")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
-                conn.setRequestProperty("Authorization", "Bearer ${provider.apiKey}")
+                conn.setRequestProperty("Authorization", "Bearer ${group.apiKey}")
                 if (baseUrl.contains("openrouter", ignoreCase = true)) {
                     conn.setRequestProperty("HTTP-Referer", "https://clawdroid.app")
                     conn.setRequestProperty("X-Title", "ClawDroid")

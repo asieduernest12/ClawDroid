@@ -47,8 +47,42 @@ class App : Application() {
         serverManager = ServerManager(this)
         TelemetryService.init(this)
 
+        // Seed default providers on first launch (includes OpenRouter dev key)
+        seedDefaultProviders()
+
         initializeTermux()
         serverManager.start()
+    }
+
+    private fun seedDefaultProviders() {
+        val configManager = com.example.clawdroid.config.ProviderConfigManager(this)
+        configManager.ensureConfigExists(defaultProviders = listOf(
+            com.example.clawdroid.model.ModelProvider(
+                modelName = "OpenRouter Auto",
+                model = "openrouter/auto",
+                provider = "openrouter",
+                apiKey = BuildConfig.OPENROUTER_API_KEY,
+                apiBase = "https://openrouter.ai/api/v1"
+            ),
+            com.example.clawdroid.model.ModelProvider(
+                modelName = "GPT-5.4",
+                model = "openai/gpt-5.4",
+                provider = "openai",
+                apiBase = "https://api.openai.com/v1"
+            ),
+            com.example.clawdroid.model.ModelProvider(
+                modelName = "Claude Sonnet 4.6",
+                model = "anthropic/claude-sonnet-4.6",
+                provider = "anthropic",
+                apiBase = "https://api.anthropic.com/v1"
+            ),
+            com.example.clawdroid.model.ModelProvider(
+                modelName = "DeepSeek Chat",
+                model = "deepseek/deepseek-chat",
+                provider = "deepseek",
+                apiBase = "https://api.deepseek.com/v1"
+            ),
+        ))
     }
 
     fun initializeTermux() {

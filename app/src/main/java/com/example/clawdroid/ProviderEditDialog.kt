@@ -58,9 +58,10 @@ class ProviderEditDialog(
 
         inputPreset.setOnItemClickListener { _, _, position, _ ->
             val preset = PREDEFINED[position]
-            inputName.setText(preset.first)
-            inputModel.setText(preset.second)
-            if (preset.third.isNotBlank()) inputUrl.setText(preset.third)
+            inputName.setText(preset.name)
+            inputModel.setText(preset.model)
+            if (preset.apiBase.isNotBlank()) inputUrl.setText(preset.apiBase)
+            if (preset.apiKey.isNotBlank()) inputKey.setText(preset.apiKey)
         }
 
         btnCancel.setOnClickListener { dismiss() }
@@ -75,9 +76,13 @@ class ProviderEditDialog(
                 return@setOnClickListener
             }
 
+            val providerSlug = model.substringBefore("/")
+                .takeIf { it.length < model.length && it.isNotBlank() }
+                ?: model.substringAfterLast("/").takeIf { it.isNotBlank() } ?: ""
             val provider = ModelProvider(
-                modelName = if (name.isNotBlank()) name else model.substringAfter("/"),
+                modelName = if (name.isNotBlank()) name else providerSlug.ifBlank { model },
                 model = model,
+                provider = providerSlug,
                 apiKey = inputKey.text.toString().trim(),
                 apiBase = inputUrl.text.toString().trim()
             )
@@ -85,6 +90,13 @@ class ProviderEditDialog(
             dismiss()
         }
     }
+
+    data class Preset(
+        val name: String,
+        val model: String,
+        val apiBase: String = "",
+        val apiKey: String = ""
+    )
 
     companion object {
         val PREDEFINED_NAMES = arrayOf(
@@ -102,18 +114,18 @@ class ProviderEditDialog(
         )
 
         val PREDEFINED = listOf(
-            Triple("gpt-5.4", "openai/gpt-5.4", "https://api.openai.com/v1"),
-            Triple("claude-sonnet-4.6", "anthropic/claude-sonnet-4.6", "https://api.anthropic.com/v1"),
-            Triple("openrouter", "openrouter/nvidia/nemotron-3-nano-30b-a3b:free", "https://openrouter.ai/api/v1"),
-            Triple("deepseek", "deepseek/deepseek-chat", ""),
-            Triple("gemini", "antigravity/gemini-2.0-flash", ""),
-            Triple("azure-gpt5", "azure/my-deployment", "https://your-resource.openai.azure.com"),
-            Triple("venice-uncensored", "venice/venice-uncensored", ""),
-            Triple("longcat", "longcat/LongCat-Flash-Thinking", ""),
-            Triple("modelscope-qwen", "modelscope/Qwen/Qwen3-235B-A22B-Instruct-2507",
+            Preset("OpenAI", "openai/gpt-5.4", "https://api.openai.com/v1"),
+            Preset("Anthropic", "anthropic/claude-sonnet-4.6", "https://api.anthropic.com/v1"),
+            Preset("OpenRouter", "openrouter/nvidia/nemotron-3-nano-30b-a3b:free", "https://openrouter.ai/api/v1"),
+            Preset("DeepSeek", "deepseek/deepseek-chat"),
+            Preset("Google Gemini", "antigravity/gemini-2.0-flash"),
+            Preset("Azure OpenAI", "azure/my-deployment", "https://your-resource.openai.azure.com"),
+            Preset("Venice", "venice/venice-uncensored"),
+            Preset("LongCat", "longcat/LongCat-Flash-Thinking"),
+            Preset("Modelscope Qwen", "modelscope/Qwen/Qwen3-235B-A22B-Instruct-2507",
                 "https://api-inference.modelscope.cn/v1"),
-            Triple("lmstudio-local", "lmstudio/openai/gpt-oss-20b", ""),
-            Triple("", "", "")
+            Preset("LM Studio (local)", "lmstudio/openai/gpt-oss-20b"),
+            Preset("Custom", "", "")
         )
     }
 }

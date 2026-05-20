@@ -48,9 +48,9 @@ class OpenRouterChatTest {
         assertTrue("OpenRouter should be in presets", presetNames.contains("OpenRouter"))
 
         val presets = ProviderEditDialog.PREDEFINED
-        val openrouterPreset = presets.find { it.second.startsWith("openrouter/") }
+        val openrouterPreset = presets.find { it.model.startsWith("openrouter/") }
         assertTrue(openrouterPreset != null)
-        assertEquals("https://openrouter.ai/api/v1", openrouterPreset!!.third)
+        assertEquals("https://openrouter.ai/api/v1", openrouterPreset!!.apiBase)
     }
 
     @Test
