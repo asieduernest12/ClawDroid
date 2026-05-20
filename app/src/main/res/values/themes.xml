@@ -1,23 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.ClawDroid" parent="Theme.Material3.DayNight.NoActionBar">
+    <!-- Base Dark Theme (default) -->
+    <style name="Theme.ClawDroid" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_variant</item>
         <item name="colorOnPrimary">@color/on_primary</item>
+        <item name="colorPrimaryContainer">@color/primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/on_primary_container</item>
+
         <item name="colorSecondary">@color/secondary</item>
         <item name="colorOnSecondary">@color/on_secondary</item>
-        <item name="android:colorBackground">@color/background</item>
-        <item name="colorSurface">@color/surface</item>
-        <item name="colorOnSurface">@color/on_surface</item>
+        <item name="colorSecondaryContainer">@color/secondary_container</item>
+        <item name="colorOnSecondaryContainer">@color/on_secondary_container</item>
 
-        <!-- Error palette -->
-        <item name="colorError">@color/status_error</item>
-        <item name="colorOnError">@android:color/white</item>
-        <item name="colorErrorContainer">#FFF9DEDC</item>
-        <item name="colorOnErrorContainer">#FF410E0B</item>
+        <item name="colorTertiary">@color/tertiary</item>
+        <item name="colorOnTertiary">@color/on_tertiary</item>
+        <item name="colorTertiaryContainer">@color/tertiary_container</item>
+        <item name="colorOnTertiaryContainer">@color/on_tertiary_container</item>
 
-        <!-- Surface variants -->
+        <item name="android:colorBackground">@color/background_deepest</item>
+        <item name="colorSurface">@color/background_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
         <item name="colorSurfaceVariant">@color/surface_variant</item>
-        <item name="colorOnSurfaceVariant">@color/on_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
+
+        <item name="colorError">@color/error</item>
+        <item name="colorOnError">@color/on_error</item>
+        <item name="colorErrorContainer">@color/error_container</item>
+        <item name="colorOnErrorContainer">@color/on_error_container</item>
+
+        <item name="colorOutline">@color/outline</item>
+        <item name="colorOutlineVariant">@color/outline_variant</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Light Theme -->
+    <style name="Theme.ClawDroid.Light" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/light_primary</item>
+        <item name="colorOnPrimary">@color/light_on_primary</item>
+        <item name="colorPrimaryContainer">@color/light_primary_container</item>
+        <item name="colorOnPrimaryContainer">@color/light_on_primary_container</item>
+
+        <item name="colorSecondary">@color/light_secondary</item>
+        <item name="colorOnSecondary">@color/light_on_primary</item>
+        <item name="colorSecondaryContainer">@color/light_surface_variant</item>
+        <item name="colorOnSecondaryContainer">@color/light_text_primary</item>
+
+        <item name="colorTertiary">@color/light_tertiary</item>
+        <item name="colorOnTertiary">@color/light_on_primary</item>
+        <item name="colorTertiaryContainer">@color/light_surface_variant</item>
+        <item name="colorOnTertiaryContainer">@color/light_text_primary</item>
+
+        <item name="android:colorBackground">@color/light_background</item>
+        <item name="colorSurface">@color/light_surface</item>
+        <item name="colorOnSurface">@color/light_text_primary</item>
+        <item name="colorSurfaceVariant">@color/light_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/light_text_secondary</item>
+
+        <item name="colorError">@color/light_error</item>
+        <item name="colorOnError">@color/light_on_primary</item>
+        <item name="colorErrorContainer">@color/light_error_container</item>
+        <item name="colorOnErrorContainer">@color/light_text_primary</item>
+
+        <item name="colorOutline">@color/light_outline</item>
+        <item name="colorOutlineVariant">@color/light_outline_variant</item>
+
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 </resources>

@@ -2,25 +2,87 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="primary">#FF6750A4</color>
-    <color name="primary_variant">#FF7C4DFF</color>
-    <color name="secondary">#FF03DAC6</color>
-    <color name="background">#FFFFFBFE</color>
-    <color name="surface">#FFFFFBFE</color>
-    <color name="on_primary">#FFFFFFFF</color>
-    <color name="on_secondary">#FF000000</color>
-    <color name="on_background">#FF1C1B1F</color>
-    <color name="on_surface">#FF1C1B1F</color>
 
-    <!-- Semantic Status Colors -->
-    <color name="status_running">#FF2E7D32</color>
-    <color name="status_stopped">#FFC62828</color>
-    <color name="status_loading">#FFF9A825</color>
-    <color name="status_offline">#FF757575</color>
-    <color name="status_online">#FF2E7D32</color>
-    <color name="status_error">#FFD32F2F</color>
+    <!-- Brand Core -->
+    <color name="primary">#FF58A6FF</color>
+    <color name="primary_variant">#FF4A90D9</color>
+    <color name="on_primary">#FF0D1117</color>
+    <color name="primary_container">#FF1A3A5C</color>
+    <color name="on_primary_container">#FFB6E3FF</color>
 
-    <!-- Surface variants for card depth -->
-    <color name="surface_variant">#FFE7E0EC</color>
-    <color name="on_surface_variant">#FF49454F</color>
+    <color name="secondary">#FF3FB950</color>
+    <color name="on_secondary">#FF0D1117</color>
+    <color name="secondary_container">#FF1A3A2A</color>
+    <color name="on_secondary_container">#FF7EE787</color>
+
+    <color name="tertiary">#FFD2A8FF</color>
+    <color name="on_tertiary">#FF0D1117</color>
+    <color name="tertiary_container">#FF3A2D5C</color>
+    <color name="on_tertiary_container">#FFE6C8FF</color>
+
+    <!-- Backgrounds -->
+    <color name="background_deepest">#FF0D1117</color>
+    <color name="background_surface">#FF161B22</color>
+    <color name="background_container">#FF1C2333</color>
+    <color name="background_surface_high">#FF21262D</color>
+
+    <!-- Text -->
+    <color name="text_primary">#FFF0F6FC</color>
+    <color name="text_secondary">#FF8B949E</color>
+    <color name="text_disabled">#FF484F58</color>
+    <color name="text_inverse">#FF0D1117</color>
+
+    <!-- Semantic Status -->
+    <color name="status_running">#FF3FB950</color>
+    <color name="status_stopped">#FF484F58</color>
+    <color name="status_loading">#FFD29922</color>
+    <color name="status_offline">#FF484F58</color>
+    <color name="status_online">#FF3FB950</color>
+    <color name="status_error">#FFF85149</color>
+    <color name="status_starting">#FFD29922</color>
+
+    <!-- Surface variants -->
+    <color name="surface_variant">#FF1C2333</color>
+    <color name="on_surface_variant">#FF8B949E</color>
+
+    <!-- Error -->
+    <color name="error">#FFF85149</color>
+    <color name="on_error">#FFFFFFFF</color>
+    <color name="error_container">#FF3D1A1A</color>
+    <color name="on_error_container">#FFFFB1AF</color>
+
+    <!-- Warning -->
+    <color name="warning">#FFD29922</color>
+    <color name="warning_container">#FF3D2E1A</color>
+    <color name="on_warning_container">#FFFFD567</color>
+
+    <!-- Outline -->
+    <color name="outline">#FF30363D</color>
+    <color name="outline_variant">#FF21262D</color>
+    <color name="outline_focus">#FF58A6FF</color>
+
+    <!-- Gradient colors (for drawables) -->
+    <color name="gradient_hero_start">#FF58A6FF</color>
+    <color name="gradient_hero_end">#FFD2A8FF</color>
+    <color name="gradient_success_start">#FF3FB950</color>
+    <color name="gradient_success_end">#FF2EA043</color>
+    <color name="gradient_error_start">#FFF85149</color>
+    <color name="gradient_error_end">#FF951F1F</color>
+
+    <!-- Light Theme Colors -->
+    <color name="light_background">#FFF6F8FA</color>
+    <color name="light_surface">#FFFFFFFF</color>
+    <color name="light_surface_variant">#FFF0F2F5</color>
+    <color name="light_primary">#FF0969DA</color>
+    <color name="light_on_primary">#FFFFFFFF</color>
+    <color name="light_primary_container">#FFDDF4FF</color>
+    <color name="light_on_primary_container">#FF003D6B</color>
+    <color name="light_secondary">#FF1A7F37</color>
+    <color name="light_tertiary">#FF8250DF</color>
+    <color name="light_text_primary">#FF1C2128</color>
+    <color name="light_text_secondary">#FF656D76</color>
+    <color name="light_error">#FFCF222E</color>
+    <color name="light_error_container">#FFFFEBE9</color>
+    <color name="light_outline">#FFD0D7DE</color>
+    <color name="light_outline_variant">#FFE3E8EE</color>
 </resources>

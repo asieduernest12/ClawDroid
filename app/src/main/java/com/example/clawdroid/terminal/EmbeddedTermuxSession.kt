@@ -1,5 +1,6 @@
 package com.example.clawdroid.terminal
 
+import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -52,7 +53,15 @@ class EmbeddedTermuxSession(
 
         processJob = scope.launch(Dispatchers.IO) {
             try {
-                val pb = ProcessBuilder("/system/bin/sh", "-c", fullCommand)
+                // Android 10+ mounts /data/data/ as noexec — direct execve() fails with EACCES.
+                // Use the dynamic linker to load the binary instead.
+                val pb = if (Build.VERSION.SDK_INT >= 29 && command.startsWith("/data/data/")) {
+                    val is64Bit = Build.SUPPORTED_64_BIT_ABIS.isNotEmpty()
+                    val linker = if (is64Bit) "/system/bin/linker64" else "/system/bin/linker"
+                    ProcessBuilder(listOf(linker, command) + args)
+                } else {
+                    ProcessBuilder("/system/bin/sh", "-c", fullCommand)
+                }
                 pb.environment().putAll(env)
                 pb.redirectErrorStream(true)
                 if (workingDir != null) {

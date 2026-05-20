@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/action_sessions"
+        android:title="@string/agent_menu_sessions"
+        android:icon="@android:drawable/ic_menu_recent_history"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_clear_chat"
+        android:title="@string/agent_menu_clear"
+        android:icon="@android:drawable/ic_menu_delete"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_fetch_models"
+        android:title="@string/agent_menu_fetch_models"
+        android:icon="@android:drawable/ic_menu_rotate"
+        app:showAsAction="never" />
+</menu>

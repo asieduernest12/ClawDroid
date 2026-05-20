@@ -41,8 +41,8 @@ class ProviderListActivity : AppCompatActivity() {
         configManager = ProviderConfigManager(this)
         configManager.ensureConfigExists(defaultProviders = listOf(
             ModelProvider(
-                modelName = "OpenRouter Auto",
-                model = "openrouter/auto",
+                modelName = "OpenRouter Nemotron",
+                model = "openrouter/nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
                 provider = "openrouter",
                 apiKey = BuildConfig.OPENROUTER_API_KEY,
                 apiBase = "https://openrouter.ai/api/v1"
