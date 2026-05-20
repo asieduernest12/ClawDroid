@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.5](https://github.com/asieduernest12/ClawDroid/compare/v0.1.4...v0.1.5) (2026-05-20)
+
+
+### Bug Fixes
+
+* **ci:** add downloadTermuxBootstraps dependency for LintVital tasks ([92c3a40](https://github.com/asieduernest12/ClawDroid/commit/92c3a402d1e45c27bc71bc6c65e3e35f2eec3833))
+
 ## 0.1.4 (2026-05-20)
 
 
