@@ -43,7 +43,7 @@ tasks.matching { it.name.startsWith("merge") && it.name.endsWith("Assets") }.con
     dependsOn("downloadTermuxBootstraps")
 }
 
-tasks.matching { it.name.contains("LintVital") }.configureEach {
+tasks.matching { it.name.contains("lintVital", ignoreCase = true) }.configureEach {
     dependsOn("downloadTermuxBootstraps")
 }
 
