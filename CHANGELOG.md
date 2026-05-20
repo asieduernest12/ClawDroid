@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
+## [0.1.6](https://github.com/asieduernest12/ClawDroid/compare/v0.1.5...v0.1.6) (2026-05-20)
+
+
+### Bug Fixes
+
+* **ci:** use case-insensitive match for lintVital task dependency ([5119593](https://github.com/asieduernest12/ClawDroid/commit/511959399ade8d9ed79cd9503ad15e6f42f40d2c))
+
 ## [0.1.5](https://github.com/asieduernest12/ClawDroid/compare/v0.1.4...v0.1.5) (2026-05-20)
 
 
