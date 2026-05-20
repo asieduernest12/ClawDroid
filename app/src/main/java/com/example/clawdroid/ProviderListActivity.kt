@@ -47,24 +47,6 @@ class ProviderListActivity : AppCompatActivity() {
                 apiKey = BuildConfig.OPENROUTER_API_KEY,
                 apiBase = "https://openrouter.ai/api/v1"
             ),
-            ModelProvider(
-                modelName = "GPT-5.4",
-                model = "openai/gpt-5.4",
-                provider = "openai",
-                apiBase = "https://api.openai.com/v1"
-            ),
-            ModelProvider(
-                modelName = "Claude Sonnet 4.6",
-                model = "anthropic/claude-sonnet-4.6",
-                provider = "anthropic",
-                apiBase = "https://api.anthropic.com/v1"
-            ),
-            ModelProvider(
-                modelName = "DeepSeek Chat",
-                model = "deepseek/deepseek-chat",
-                provider = "deepseek",
-                apiBase = "https://api.deepseek.com/v1"
-            ),
         ))
 
         toolbar.setNavigationOnClickListener { finish() }

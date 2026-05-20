@@ -695,6 +695,12 @@ class AgentChatActivity : AppCompatActivity() {
                         }
                     }
                 }
+                val requestBody = JSONObject().apply {
+                    put("model", model)
+                    put("messages", messagesJson)
+                }
+                conn.outputStream.write(requestBody.toString().toByteArray())
+
                 val responseCode = conn.responseCode
                 val response = if (responseCode in 200..299) {
                     conn.inputStream.bufferedReader().readText()
