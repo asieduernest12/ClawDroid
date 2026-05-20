@@ -25,7 +25,7 @@ jobs:
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
-                  node-version: '20'
+                  node-version: '22'
 
             - name: Install commit-and-tag-version
               run: npm install -g commit-and-tag-version
@@ -57,7 +57,6 @@ jobs:
               run: |
                   git push origin main
                   if [[ "${{ github.event.head_commit.message }}" != *"chore(skip-tag)"* ]]; then
-                      git tag ${{ steps.bump.outputs.tag_name }}
                       git push origin ${{ steps.bump.outputs.tag_name }}
                   fi
 
